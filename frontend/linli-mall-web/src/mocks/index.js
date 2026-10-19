@@ -5,6 +5,7 @@ const ORDER_KEY = 'linli_mock_orders_v1'
 const ADDRESS_KEY = 'linli_mock_addresses_v1'
 const COUPON_KEY = 'linli_mock_coupons_v1'
 const AFTER_SALE_KEY = 'linli_mock_after_sales_v1'
+const REVIEW_KEY = 'linli_mock_reviews_v1'
 
 const delay = (ms = 180) => new Promise((resolve) => setTimeout(resolve, ms))
 const traceId = () => Math.random().toString(16).slice(2, 10)
@@ -45,9 +46,13 @@ function parseBody(config) {
 function parseUrl(config) {
   const raw = `${config.baseURL || ''}${config.url || ''}`
   const url = new URL(raw, 'http://mock.local')
+  const query = Object.fromEntries(url.searchParams.entries())
+  for (const [key, value] of Object.entries(config.params || {})) {
+    if (value !== undefined && value !== null && value !== '') query[key] = String(value)
+  }
   return {
     path: url.pathname.replace(/^\/api\/v1/, '') || '/',
-    query: Object.fromEntries(url.searchParams.entries()),
+    query,
   }
 }
 
@@ -88,6 +93,13 @@ function addressesFromStorage() {
   if (stored) return stored
   write(ADDRESS_KEY, seedAddresses)
   return seedAddresses
+}
+
+function reviewsFromStorage() {
+  const stored = read(REVIEW_KEY, null)
+  if (stored) return stored
+  write(REVIEW_KEY, seedReviews)
+  return seedReviews
 }
 
 function orderNo() {
@@ -132,7 +144,7 @@ async function handleMock(config) {
 
   const reviewsMatch = path.match(/^\/products\/(\d+)\/reviews$/)
   if (reviewsMatch && method === 'get') {
-    const list = seedReviews.filter((item) => item.productId === Number(reviewsMatch[1]))
+    const list = reviewsFromStorage().filter((item) => item.productId === Number(reviewsMatch[1]))
     return ok({ list, total: list.length, pageNum: 1, pageSize: 20 })
   }
 
@@ -150,6 +162,31 @@ async function handleMock(config) {
   }
 
   if (path === '/auth/logout' && method === 'post') return ok(null)
+
+  if (path === '/reviews' && method === 'post') {
+    const order = ordersFromStorage().find((item) => item.orderNo === body.orderNo)
+    if (!order) return fail(99001, '订单不存在或无权访问')
+    if (order.status !== 'COMPLETED') return fail(60003, '订单完成后才可以评价')
+    const item = order.items.find((orderItem) => orderItem.productId === Number(body.productId))
+    if (!item) return fail(60003, '该商品不在当前订单中')
+    const content = String(body.content || '').trim()
+    if (!content) return fail(60003, '评价内容不能为空')
+    const list = reviewsFromStorage()
+    if (list.some((review) => review.orderNo === body.orderNo && Number(review.productId) === Number(body.productId))) {
+      return fail(60002, '该商品已评价')
+    }
+    const review = {
+      id: Date.now(),
+      productId: Number(body.productId),
+      orderNo: body.orderNo,
+      user: body.anonymous ? '匿名邻居' : mockProfile.nickname,
+      rating: Number(body.rating || 5),
+      content,
+      createdAt: new Date().toLocaleString('zh-CN', { hour12: false }),
+    }
+    write(REVIEW_KEY, [review, ...list])
+    return ok(review)
+  }
 
   if (path === '/users/me' && method === 'get') {
     return ok({ user: mockProfile, permissions: memberPermissions })

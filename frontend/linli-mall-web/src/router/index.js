@@ -11,6 +11,7 @@ const routes = [
   { path: '/payment/:orderNo', name: 'payment', component: () => import('@/views/PaymentView.vue'), meta: { requiresAuth: true, title: '订单支付' } },
   { path: '/orders', name: 'orders', component: () => import('@/views/OrdersView.vue'), meta: { requiresAuth: true, tab: true, title: '我的订单' } },
   { path: '/orders/:orderNo', name: 'order-detail', component: () => import('@/views/OrderDetailView.vue'), meta: { requiresAuth: true, title: '订单详情' } },
+  { path: '/reviews/create', name: 'review-create', component: () => import('@/views/ReviewCreateView.vue'), meta: { requiresAuth: true, title: '发表评价' } },
   { path: '/after-sales', name: 'after-sales', component: () => import('@/views/AfterSalesView.vue'), meta: { requiresAuth: true, title: '售后服务' } },
   { path: '/me', name: 'profile', component: () => import('@/views/ProfileView.vue'), meta: { requiresAuth: true, tab: true, title: '个人中心' } },
   { path: '/me/addresses', name: 'addresses', component: () => import('@/views/AddressesView.vue'), meta: { requiresAuth: true, title: '收货地址' } },

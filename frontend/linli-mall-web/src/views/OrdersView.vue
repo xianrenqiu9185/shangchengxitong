@@ -90,6 +90,15 @@ onMounted(load)
           >
             确认收货
           </van-button>
+          <van-button
+            v-if="order.status === 'COMPLETED'"
+            size="small"
+            round
+            type="primary"
+            @click="router.push({ name: 'review-create', query: { orderNo: order.orderNo } })"
+          >
+            评价商品
+          </van-button>
           <van-button size="small" round plain type="default" @click="router.push(`/orders/${order.orderNo}`)">
             查看详情
           </van-button>

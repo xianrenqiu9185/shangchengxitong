@@ -152,3 +152,10 @@ export const seedLogs = [
   { id: 5, time: '2026-10-18 18:30', user: '商家运营', action: '商品上架', target: '赣南脐橙', traceId: 'e18c7a3d' },
   { id: 6, time: '2026-10-18 15:10', user: '商家运营', action: '关闭异常订单', target: 'LL202610180005', traceId: 'f72d5b1c' },
 ]
+
+export const seedAccounts = [
+  { id: 1, nickname: '平台管理员', phone: '13800000001', role: 'admin', roleName: '平台管理员', status: 1, lastLoginAt: '2026-10-19 10:30', createdAt: '2026-10-19' },
+  { id: 2, nickname: '商家运营', phone: '13800000002', role: 'operator', roleName: '商家运营', status: 1, lastLoginAt: '2026-10-19 09:42', createdAt: '2026-10-19' },
+  { id: 3, nickname: '仓库运营', phone: '13800000021', role: 'operator', roleName: '商家运营', status: 1, lastLoginAt: '2026-10-18 17:20', createdAt: '2026-10-18' },
+  { id: 4, nickname: '离职运营', phone: '13800000022', role: 'operator', roleName: '商家运营', status: 0, lastLoginAt: '2026-10-10 11:05', createdAt: '2026-10-01' },
+]
