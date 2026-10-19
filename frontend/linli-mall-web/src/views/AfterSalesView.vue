@@ -1,11 +1,13 @@
 <script setup>
 import { onMounted, reactive, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { getAfterSales, createAfterSale } from '@/api/afterSale'
 import { getOrders } from '@/api/order'
 import AppHeader from '@/components/AppHeader.vue'
 
 const records = ref([])
+const router = useRouter()
 const orders = ref([])
 const showForm = ref(false)
 const form = reactive({ orderNo: '', type: 'REFUND', reason: '', description: '' })
@@ -48,7 +50,10 @@ onMounted(load)
       <article v-for="record in records" :key="record.saleNo" class="after-sale-card">
         <div><b>{{ record.type === 'RETURN' ? '退货退款' : '仅退款' }}</b><em>{{ record.status === 'PENDING' ? '待审核' : record.status }}</em></div>
         <p>{{ record.reason }}</p>
-        <span>订单 {{ record.orderNo }} · {{ record.createdAt }}</span>
+        <div class="after-sale-foot">
+          <span>订单 {{ record.orderNo }} · {{ record.createdAt }}</span>
+          <button @click="router.push(`/after-sales/${record.saleNo}`)">查看进度 ›</button>
+        </div>
       </article>
     </div>
     <div v-else class="empty-block">
@@ -153,6 +158,21 @@ onMounted(load)
 .after-sale-card span {
   color: #9aa29c;
   font-size: 10px;
+}
+
+.after-sale-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.after-sale-foot button {
+  border: 0;
+  background: transparent;
+  color: #1f8a4c;
+  font-size: 10px;
+  font-weight: 700;
 }
 
 .apply-button {

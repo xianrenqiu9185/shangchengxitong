@@ -20,6 +20,7 @@ const shortcuts = [
 ]
 
 const menus = [
+  { label: '个人资料', desc: '修改昵称与基本资料', icon: '👤', to: '/me/edit' },
   { label: '收货地址', desc: '管理常用配送地址', icon: '📍', to: '/me/addresses' },
   { label: '优惠券', desc: '领取与查看我的优惠券', icon: '🎟️', to: '/coupons' },
   { label: '售后服务', desc: '退款、退货与处理进度', icon: '🛠️', to: '/after-sales' },
@@ -56,7 +57,7 @@ onMounted(async () => {
         <h1>{{ user.displayName }}</h1>
         <p>{{ maskPhone(user.profile?.phone) }} · 积分 {{ user.profile?.points || 0 }}</p>
       </div>
-      <button class="setting-button">⚙</button>
+      <button class="setting-button" @click="router.push('/me/edit')">⚙</button>
     </section>
 
     <section class="member-card">

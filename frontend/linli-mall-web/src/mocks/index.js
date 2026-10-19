@@ -1,4 +1,4 @@
-import { coupons, categories, memberPermissions, mockProfile, products, seedAddresses, seedOrders, seedReviews } from './data'
+import { coupons, categories, memberPermissions, mockProfile, products, seedAddresses, seedAfterSales, seedOrders, seedReviews } from './data'
 
 const CART_KEY = 'linli_mock_cart_v1'
 const ORDER_KEY = 'linli_mock_orders_v1'
@@ -6,6 +6,7 @@ const ADDRESS_KEY = 'linli_mock_addresses_v1'
 const COUPON_KEY = 'linli_mock_coupons_v1'
 const AFTER_SALE_KEY = 'linli_mock_after_sales_v1'
 const REVIEW_KEY = 'linli_mock_reviews_v1'
+const PROFILE_KEY = 'linli_mock_profile_v1'
 
 const delay = (ms = 180) => new Promise((resolve) => setTimeout(resolve, ms))
 const traceId = () => Math.random().toString(16).slice(2, 10)
@@ -102,6 +103,20 @@ function reviewsFromStorage() {
   return seedReviews
 }
 
+function profileFromStorage() {
+  const stored = read(PROFILE_KEY, null)
+  if (stored) return stored
+  write(PROFILE_KEY, mockProfile)
+  return mockProfile
+}
+
+function afterSalesFromStorage() {
+  const stored = read(AFTER_SALE_KEY, null)
+  if (stored) return stored
+  write(AFTER_SALE_KEY, seedAfterSales)
+  return seedAfterSales
+}
+
 function orderNo() {
   const now = new Date()
   const pad = (n) => String(n).padStart(2, '0')
@@ -151,7 +166,8 @@ async function handleMock(config) {
   if (path === '/auth/login' && method === 'post') {
     if (!body.phone || !body.password) return fail(10007, '请输入手机号和密码')
     if (String(body.password) !== '123456') return fail(10007, '手机号或密码错误')
-    const user = { ...mockProfile, phone: String(body.phone) }
+    const user = { ...profileFromStorage(), phone: String(body.phone) }
+    write(PROFILE_KEY, user)
     return ok({ token: `mock-token-${body.phone}-${Date.now()}`, user, permissions: memberPermissions })
   }
 
@@ -189,11 +205,13 @@ async function handleMock(config) {
   }
 
   if (path === '/users/me' && method === 'get') {
-    return ok({ user: mockProfile, permissions: memberPermissions })
+    return ok({ user: profileFromStorage(), permissions: memberPermissions })
   }
 
   if (path === '/users/me' && method === 'put') {
-    return ok({ user: { ...mockProfile, ...body }, permissions: memberPermissions })
+    const user = { ...profileFromStorage(), ...body }
+    write(PROFILE_KEY, user)
+    return ok({ user, permissions: memberPermissions })
   }
 
   if (path === '/users/me/addresses' && method === 'get') return ok(addressesFromStorage())
@@ -373,11 +391,18 @@ async function handleMock(config) {
   }
 
   if (path === '/after-sales' && method === 'get') {
-    return ok({ list: read(AFTER_SALE_KEY, []), total: read(AFTER_SALE_KEY, []).length, pageNum: 1, pageSize: 20 })
+    const list = afterSalesFromStorage()
+    return ok({ list, total: list.length, pageNum: 1, pageSize: 20 })
+  }
+
+  const afterSaleMatch = path.match(/^\/after-sales\/([^/]+)$/)
+  if (afterSaleMatch && method === 'get') {
+    const record = afterSalesFromStorage().find((item) => item.saleNo === afterSaleMatch[1])
+    return record ? ok(record) : fail(99001, '售后单不存在或无权访问')
   }
 
   if (path === '/after-sales' && method === 'post') {
-    const list = read(AFTER_SALE_KEY, [])
+    const list = afterSalesFromStorage()
     const sale = { ...body, saleNo: `AS${Date.now()}`, status: 'PENDING', createdAt: new Date().toLocaleString('zh-CN', { hour12: false }) }
     write(AFTER_SALE_KEY, [sale, ...list])
     return ok(sale)
