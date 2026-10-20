@@ -1,9 +1,14 @@
 <script setup>
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import * as echarts from 'echarts'
+import * as echarts from 'echarts/core'
+import { LineChart } from 'echarts/charts'
+import { GridComponent, TooltipComponent } from 'echarts/components'
+import { CanvasRenderer } from 'echarts/renderers'
 import { getDashboard } from '@/api/admin'
 import { orderStatusMap } from '@/utils/dict'
 import { formatPrice } from '@/utils/format'
+
+echarts.use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])
 
 const data = ref(null)
 const chartEl = ref(null)
@@ -45,10 +50,7 @@ function renderChart() {
         lineStyle: { width: 3, color: '#1f8a4c' },
         itemStyle: { color: '#1f8a4c' },
         areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(31,138,76,.28)' },
-            { offset: 1, color: 'rgba(31,138,76,.02)' },
-          ]),
+          color: 'rgba(31, 138, 76, 0.18)',
         },
       },
     ],

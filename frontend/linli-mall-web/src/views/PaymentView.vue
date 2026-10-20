@@ -1,8 +1,8 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showSuccessToast, showToast } from 'vant'
-import { getOrder, payOrder } from '@/api/order'
+import { getOrder, getPayment, payOrder } from '@/api/order'
 import { formatPrice } from '@/utils/format'
 import { useSubmit } from '@/composables/useSubmit'
 import AppHeader from '@/components/AppHeader.vue'
@@ -13,12 +13,41 @@ const order = ref(null)
 const method = ref('MOCK')
 const paid = ref(false)
 const payNo = ref('')
+const polling = ref(false)
+let pollCancelled = false
+
+async function waitForPayment(no) {
+  polling.value = true
+  try {
+    for (let attempt = 0; attempt < 30; attempt += 1) {
+      if (pollCancelled) return
+      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const result = await getPayment(no)
+      if (result.status === 'PAID') {
+        paid.value = true
+        showSuccessToast('支付成功')
+        return
+      }
+      if (['FAILED', 'CLOSED'].includes(result.status)) {
+        showToast('支付未完成，请稍后重试')
+        return
+      }
+    }
+    showToast('支付结果确认超时，请稍后在订单详情查看')
+  } finally {
+    polling.value = false
+  }
+}
 
 async function pay() {
   const result = await payOrder({ orderNo: order.value.orderNo, method: method.value })
   payNo.value = result.payNo
-  paid.value = true
-  showSuccessToast('支付成功')
+  if (result.status === 'PAID') {
+    paid.value = true
+    showSuccessToast('支付成功')
+  } else {
+    await waitForPayment(result.payNo)
+  }
 }
 
 const { submitting, run } = useSubmit(pay)
@@ -32,6 +61,10 @@ onMounted(async () => {
     paid.value = true
     payNo.value = order.value.orderNo
   }
+})
+
+onBeforeUnmount(() => {
+  pollCancelled = true
 })
 </script>
 
@@ -56,6 +89,14 @@ onMounted(async () => {
         <strong><small>¥</small>{{ formatPrice(order.payAmount) }}</strong>
         <p>订单号 {{ order.orderNo }}</p>
         <em>请在 30 分钟内完成支付，超时将自动关闭订单</em>
+      </section>
+
+      <section v-if="polling" class="poll-card">
+        <span class="poll-dot" />
+        <div>
+          <b>正在确认支付结果</b>
+          <p>后端回调确认中，请不要关闭页面。</p>
+        </div>
       </section>
 
       <section class="method-card">
@@ -85,7 +126,7 @@ onMounted(async () => {
 
       <div class="pay-bar">
         <span>应付 <b>¥{{ formatPrice(order.payAmount) }}</b></span>
-        <button :disabled="submitting" @click="run">{{ submitting ? '支付中…' : '确认支付' }}</button>
+        <button :disabled="submitting || polling" @click="run">{{ submitting || polling ? '确认中…' : '确认支付' }}</button>
       </div>
     </template>
   </div>
@@ -180,6 +221,47 @@ onMounted(async () => {
   border-radius: 16px;
   background: #fffaf0;
   color: #8a6d3b;
+}
+
+.poll-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 24px rgba(30, 62, 44, 0.06);
+}
+
+.poll-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #1f8a4c;
+  box-shadow: 0 0 0 6px rgba(31, 138, 76, 0.12);
+  animation: pulse 1.2s infinite;
+}
+
+.poll-card div {
+  display: grid;
+  gap: 3px;
+}
+
+.poll-card b {
+  font-size: 12px;
+}
+
+.poll-card p {
+  margin: 0;
+  color: #8a948c;
+  font-size: 10px;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
 }
 
 .security-note b {
