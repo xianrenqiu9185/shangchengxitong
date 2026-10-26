@@ -56,6 +56,15 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public Product requireOnSale(Long id) {
+        Product product = productMapper.selectById(id);
+        if (product == null || !Integer.valueOf(1).equals(product.getStatus())) {
+            throw new BizException(ErrorCode.PRODUCT_UNAVAILABLE);
+        }
+        return product;
+    }
+
+    @Override
     public PageResult<ProductView> listAdmin(Long categoryId, String keyword, Integer status,
                                              long pageNum, long pageSize) {
         return query(categoryId, keyword, status, pageNum, pageSize);
