@@ -1,0 +1,105 @@
+name: CI
+
+# 触发规则：
+#   - 推送到 develop / main 触发完整流水线
+#   - 面向 develop / main 的合并请求触发校验
+on:
+  push:
+    branches: [develop, main]
+  pull_request:
+    branches: [develop, main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: 后端构建与测试
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root123456
+          MYSQL_DATABASE: linli_fresh
+          TZ: Asia/Shanghai
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -uroot -proot123456"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装 JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: 导入数据库脚本与初始化数据
+        run: |
+          mysql -h 127.0.0.1 -uroot -proot123456 linli_fresh < docs/sql/schema.sql
+          mysql -h 127.0.0.1 -uroot -proot123456 linli_fresh < docs/sql/init_data.sql
+          mysql -h 127.0.0.1 -uroot -proot123456 -N -e \
+            "SELECT CONCAT('tables=', COUNT(*)) FROM information_schema.tables WHERE table_schema='linli_fresh';"
+
+      - name: 编译与测试
+        working-directory: backend
+        run: mvn -B verify
+
+      - name: 归档测试报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-reports
+          path: backend/target/surefire-reports/
+          if-no-files-found: ignore
+
+      - name: 归档可执行包
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: linli-mall-jar
+          path: backend/target/*.jar
+          if-no-files-found: error
+
+  docker:
+    name: 构建后端镜像
+    runs-on: ubuntu-latest
+    needs: backend
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 设置 Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: 构建镜像（不推送）
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: false
+          tags: linli-mall-api:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+# 后续接入服务器部署时，在此追加 deploy job：
+#   1. docker/login-action 登录镜像仓库（GHCR 或阿里云 ACR）
+#   2. 推送镜像，标签使用提交短哈希
+#   3. ssh 到目标机执行 docker compose pull && up -d
+#   4. 执行 deploy/smoke-test.sh，失败则回滚到上一标签
