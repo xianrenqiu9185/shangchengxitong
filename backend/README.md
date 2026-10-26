@@ -96,7 +96,8 @@ src/main/java/com/linli/mall/
 - 请求头：`Authorization: Bearer <token>`。
 - `AuthInterceptor` 负责：取 Token → 查 Redis → 写入 `UserContext` → 校验 `@RequirePermission`。
 - 权限点校验由 `PermissionChecker` 提供实现（用户/RBAC 模块负责）；未提供实现时仅做登录校验并打印警告。
-- 公开路径已在 `WebConfig` 排除：`/api/v1/health`、`/api/v1/auth/**`、`/api/v1/products/**`、`/api/v1/categories/**`、`/api/v1/doc/**`。
+- 公开路径已在 `WebConfig` 排除：`/api/v1/health`、`/api/v1/auth/login`、`/api/v1/auth/register`、`/api/v1/products/**`、`/api/v1/categories/**`、`/api/v1/doc/**`。
+- 注销接口仍要求携带有效 Token，由 `AuthInterceptor` 先完成登录校验。
 
 ## 开发配置
 
@@ -107,8 +108,11 @@ src/main/java/com/linli/mall/
 
 生产配置 `application-prod.yml` 使用环境变量 `DB_URL / DB_USERNAME / DB_PASSWORD / REDIS_HOST / REDIS_PORT`，禁止把生产口令写入代码。
 
-## 下一步（B 负责）
+## B 第一周已实现
 
-1. 实现注册/登录/注销与 Token 会话写入。
-2. 实现 `PermissionChecker`（基于 `t_role_permission` + 缓存）。
-3. 商品、购物车、售后、评价模块。
+1. 注册/登录/注销、Redis 不透明 Token 会话、登录失败锁定、按用户批量踢下线。
+2. `PermissionChecker`（基于 `t_role_permission` + Redis 缓存）与 `@RequirePermission` 校验。
+3. 商品/分类公开查询与后台 CRUD、缓存失效、上下架；购物车合并与结算汇总。
+4. 售后申请/查询/审核、`Idempotency-Key` 幂等、退款编排；订单/退款通过 Port 等待 A 接入。
+
+接口、缓存键、数据契约与 A 的 Port 契约详见 [B 第一周实现说明](../docs/B-第一周实现说明.md)。
