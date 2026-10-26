@@ -205,6 +205,18 @@ export const seedAddresses = [
   { id: 2, receiver: '林女士', phone: '13800000003', province: '上海市', city: '上海市', district: '浦东新区', detail: '邻里鲜生超市前台（自提点）', isDefault: false, tag: '自提' },
 ]
 
+export const seedAfterSales = [
+  {
+    saleNo: 'AS202610180001',
+    orderNo: 'LL202610170002',
+    type: 'REFUND',
+    reason: '商品包装破损',
+    description: '吐司外包装有一处压痕，申请仅退款。',
+    status: 'PENDING',
+    createdAt: '2026-10-18 10:20',
+  },
+]
+
 function orderItem(productId, quantity) {
   const product = products.find((item) => item.id === productId)
   return {

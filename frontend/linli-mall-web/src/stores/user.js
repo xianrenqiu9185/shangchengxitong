@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { login, logout, register } from '@/api/auth'
-import { getMe } from '@/api/user'
+import { getMe, updateMe } from '@/api/user'
 import { clearToken, getToken, setToken } from '@/utils/auth'
 
 export const useUserStore = defineStore('user', {
@@ -34,6 +34,12 @@ export const useUserStore = defineStore('user', {
       const data = await getMe()
       this.profile = data.user
       this.permissions = data.permissions || []
+      return data
+    },
+    async updateProfile(payload) {
+      const data = await updateMe(payload)
+      this.profile = data.user
+      this.permissions = data.permissions || this.permissions
       return data
     },
     async logout() {

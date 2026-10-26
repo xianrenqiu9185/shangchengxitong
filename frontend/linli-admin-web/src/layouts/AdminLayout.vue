@@ -16,6 +16,7 @@ import {
   SwitchButton,
   Tickets,
   User,
+  UserFilled,
 } from '@element-plus/icons-vue'
 import { useUserStore } from '@/stores/user'
 
@@ -37,6 +38,7 @@ const menuItems = [
   { path: '/roles', label: '角色权限', icon: Lock, perm: 'system:role:manage' },
   { path: '/configs', label: '系统配置', icon: Setting, perm: 'system:config:manage' },
   { path: '/logs', label: '日志审计', icon: Document, perm: 'system:log:audit' },
+  { path: '/accounts', label: '账号管理', icon: UserFilled, perm: 'system:account:manage' },
 ]
 
 const visibleMenu = computed(() => menuItems.filter((item) => user.hasPerm(item.perm)))

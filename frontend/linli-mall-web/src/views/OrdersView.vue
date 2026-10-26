@@ -1,6 +1,6 @@
 <script setup>
-import { onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { onMounted, ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { cancelOrder, confirmOrder, getOrders } from '@/api/order'
 import { orderStatuses } from '@/utils/dict'
@@ -8,7 +8,8 @@ import AppHeader from '@/components/AppHeader.vue'
 import OrderCard from '@/components/OrderCard.vue'
 
 const router = useRouter()
-const active = ref('')
+const route = useRoute()
+const active = ref(String(route.query.status || ''))
 const orders = ref([])
 const loading = ref(false)
 
@@ -35,6 +36,14 @@ async function confirm(order) {
   showToast('已确认收货')
   await load()
 }
+
+watch(
+  () => route.query.status,
+  (value) => {
+    active.value = String(value || '')
+    load()
+  },
+)
 
 onMounted(load)
 </script>
@@ -89,6 +98,15 @@ onMounted(load)
             @click="confirm(order)"
           >
             确认收货
+          </van-button>
+          <van-button
+            v-if="order.status === 'COMPLETED'"
+            size="small"
+            round
+            type="primary"
+            @click="router.push({ name: 'review-create', query: { orderNo: order.orderNo } })"
+          >
+            评价商品
           </van-button>
           <van-button size="small" round plain type="default" @click="router.push(`/orders/${order.orderNo}`)">
             查看详情

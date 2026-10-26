@@ -92,6 +92,14 @@ onMounted(load)
           去支付
         </van-button>
         <van-button v-if="order.status === 'PENDING_RECEIPT'" round type="primary" @click="confirm">确认收货</van-button>
+        <van-button
+          v-if="order.status === 'COMPLETED'"
+          round
+          type="primary"
+          @click="router.push({ name: 'review-create', query: { orderNo: order.orderNo } })"
+        >
+          评价商品
+        </van-button>
         <van-button v-if="order.status === 'COMPLETED'" round plain @click="router.push('/after-sales')">申请售后</van-button>
       </div>
     </template>

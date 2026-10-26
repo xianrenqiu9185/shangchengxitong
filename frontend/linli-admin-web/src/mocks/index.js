@@ -4,6 +4,7 @@ import {
   businessPermissions,
   permissionList,
   seedAfterSales,
+  seedAccounts,
   seedCategories,
   seedConfigs,
   seedCoupons,
@@ -28,6 +29,7 @@ const KEYS = {
   roles: 'linli_admin_roles_v1',
   configs: 'linli_admin_configs_v1',
   logs: 'linli_admin_logs_v1',
+  accounts: 'linli_admin_accounts_v1',
 }
 
 const delay = (ms = 220) => new Promise((resolve) => setTimeout(resolve, ms))
@@ -71,9 +73,13 @@ function parseBody(config) {
 function parseUrl(config) {
   const raw = `${config.baseURL || ''}${config.url || ''}`
   const url = new URL(raw, 'http://mock.local')
+  const query = Object.fromEntries(url.searchParams.entries())
+  for (const [key, value] of Object.entries(config.params || {})) {
+    if (value !== undefined && value !== null && value !== '') query[key] = String(value)
+  }
   return {
     path: url.pathname.replace(/^\/api\/v1/, '') || '/',
-    query: Object.fromEntries(url.searchParams.entries()),
+    query,
   }
 }
 
@@ -109,6 +115,7 @@ function resourceArray(path) {
   if (path.startsWith('/admin/roles')) return { key: KEYS.roles, seed: seedRoles, idKey: 'id' }
   if (path.startsWith('/admin/configs')) return { key: KEYS.configs, seed: seedConfigs, idKey: 'key' }
   if (path.startsWith('/admin/logs')) return { key: KEYS.logs, seed: seedLogs, idKey: 'id' }
+  if (path.startsWith('/admin/accounts')) return { key: KEYS.accounts, seed: seedAccounts, idKey: 'id' }
   return null
 }
 
@@ -306,6 +313,29 @@ async function handleMock(config) {
     const id = Number(memberStatusMatch[1])
     const list = listData(KEYS.members, seedMembers).map((item) => (item.id === id ? { ...item, status: Number(body.status) } : item))
     write(KEYS.members, list)
+    return ok(list.find((item) => item.id === id))
+  }
+
+  if (path === '/admin/accounts' && method === 'post') {
+    const list = listData(KEYS.accounts, seedAccounts)
+    if (list.some((item) => item.phone === String(body.phone))) return fail(10006, '该手机号已存在后台账号')
+    const item = {
+      ...body,
+      id: Date.now(),
+      roleName: body.role === 'admin' ? '平台管理员' : '商家运营',
+      status: 1,
+      lastLoginAt: '-',
+      createdAt: new Date().toLocaleDateString('zh-CN'),
+    }
+    write(KEYS.accounts, [item, ...list])
+    return ok(item)
+  }
+
+  const accountStatusMatch = path.match(/^\/admin\/accounts\/(\d+)\/status$/)
+  if (accountStatusMatch && method === 'put') {
+    const id = Number(accountStatusMatch[1])
+    const list = listData(KEYS.accounts, seedAccounts).map((item) => (item.id === id ? { ...item, status: Number(body.status) } : item))
+    write(KEYS.accounts, list)
     return ok(list.find((item) => item.id === id))
   }
 

@@ -25,6 +25,7 @@ const routes = [
       { path: 'roles', name: 'roles', component: () => import('@/views/ResourceListView.vue'), meta: { title: '角色权限', perm: 'system:role:manage', resource: 'roles' } },
       { path: 'configs', name: 'configs', component: () => import('@/views/ResourceListView.vue'), meta: { title: '系统配置', perm: 'system:config:manage', resource: 'configs' } },
       { path: 'logs', name: 'logs', component: () => import('@/views/ResourceListView.vue'), meta: { title: '日志审计', perm: 'system:log:audit', resource: 'logs' } },
+      { path: 'accounts', name: 'accounts', component: () => import('@/views/AccountsView.vue'), meta: { title: '账号管理', perm: 'system:account:manage' } },
     ],
   },
   { path: '/403', name: 'forbidden', component: () => import('@/views/ForbiddenView.vue'), meta: { public: true, title: '无操作权限' } },
