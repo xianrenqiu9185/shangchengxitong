@@ -44,7 +44,7 @@ class UserServiceTest {
     @InjectMocks private UserServiceImpl userService;
 
     @Test
-    void registerShouldCreateMemberAndIssueSession() {
+    void registerShouldCreateMemberWithoutSession() {
         Role role = role(1L, "MEMBER", "会员");
         when(userMapper.selectCount(any())).thenReturn(0L);
         when(roleMapper.selectOne(any())).thenReturn(role);
@@ -54,14 +54,11 @@ class UserServiceTest {
             user.setId(10L);
             return 1;
         });
-        when(tokenSessionService.createSession(10L, 1, 1L)).thenReturn("token-1");
-        when(rolePermissionService.getPermissions(1L)).thenReturn(List.of("user:profile:update"));
 
-        AuthResponse response = userService.register(new RegisterRequest("13812345678", "abcd1234", "小邻"));
+        Long userId = userService.register(new RegisterRequest("13812345678", "abcd1234", "小邻"));
 
-        assertThat(response.token()).isEqualTo("token-1");
-        assertThat(response.user().role()).isEqualTo("member");
-        assertThat(response.permissions()).containsExactly("user:profile:update");
+        assertThat(userId).isEqualTo(10L);
+        verify(tokenSessionService, never()).createSession(any(), any(), any());
         ArgumentCaptor<User> captor = ArgumentCaptor.forClass(User.class);
         verify(userMapper).insert(captor.capture());
         assertThat(captor.getValue().getPassword()).isEqualTo("hashed");

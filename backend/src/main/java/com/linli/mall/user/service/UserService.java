@@ -8,7 +8,7 @@ import com.linli.mall.user.dto.UserProfileResponse;
 
 public interface UserService {
 
-    AuthResponse register(RegisterRequest request);
+    Long register(RegisterRequest request);
 
     AuthResponse login(LoginRequest request);
 

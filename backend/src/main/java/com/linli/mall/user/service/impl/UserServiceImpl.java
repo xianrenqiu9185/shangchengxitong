@@ -39,7 +39,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional
-    public AuthResponse register(RegisterRequest request) {
+    public Long register(RegisterRequest request) {
         Long count = userMapper.selectCount(new LambdaQueryWrapper<User>().eq(User::getPhone, request.phone()));
         if (count != null && count > 0) {
             throw new BizException(ErrorCode.PHONE_REGISTERED);
@@ -63,7 +63,8 @@ public class UserServiceImpl implements UserService {
         } catch (DuplicateKeyException e) {
             throw new BizException(ErrorCode.PHONE_REGISTERED);
         }
-        return issueSession(user, memberRole);
+        // 注册不签发 Token，前端注册成功后跳转登录页
+        return user.getId();
     }
 
     @Override
