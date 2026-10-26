@@ -43,6 +43,7 @@ function Get-DockerExe {
 
 function Get-ContainerHealth {
     param([string]$Name)
+    $ErrorActionPreference = 'SilentlyContinue'
     try {
         $state = & docker inspect --format '{{.State.Status}}' $Name 2>$null
         if (-not $state) { return '不存在' }
