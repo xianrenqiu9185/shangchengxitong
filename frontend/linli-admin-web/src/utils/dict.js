@@ -1,7 +1,7 @@
 export const orderStatusMap = {
   PENDING_PAYMENT: { label: '待付款', type: 'warning' },
-  PENDING_SHIPMENT: { label: '待发货', type: 'primary' },
-  PENDING_RECEIPT: { label: '待收货', type: 'info' },
+  PAID: { label: '待发货', type: 'primary' },
+  DELIVERING: { label: '待收货', type: 'info' },
   COMPLETED: { label: '已完成', type: 'success' },
   CANCELLED: { label: '已关闭', type: 'info' },
 }

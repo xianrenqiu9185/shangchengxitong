@@ -174,7 +174,8 @@ async function handleMock(config) {
   if (path === '/auth/register' && method === 'post') {
     if (!body.phone || !body.password) return fail(10007, '请完整填写注册信息')
     const user = { ...mockProfile, nickname: body.nickname || '邻里新会员', phone: String(body.phone), points: 0 }
-    return ok({ token: `mock-token-${body.phone}-${Date.now()}`, user, permissions: memberPermissions })
+    write(PROFILE_KEY, user)
+    return ok({ userId: Date.now() })
   }
 
   if (path === '/auth/logout' && method === 'post') return ok(null)
@@ -299,7 +300,8 @@ async function handleMock(config) {
   if (path === '/orders/preview' && method === 'post') {
     const items = enrichCart(cartFromStorage()).filter((item) => item.checked)
     const goodsAmount = items.reduce((sum, item) => sum + item.subtotal, 0)
-    const deliveryFee = body.deliveryType === 'PICKUP' ? 0 : deliveryFeeFor(goodsAmount)
+    const isPickup = Number(body.fulfillType) === 2 || body.deliveryType === 'PICKUP'
+    const deliveryFee = isPickup ? 0 : deliveryFeeFor(goodsAmount)
     const coupon = coupons.find((item) => item.id === Number(body.couponId))
     const discountAmount = coupon && goodsAmount >= coupon.threshold ? coupon.amount : 0
     return ok({ items, goodsAmount, deliveryFee, discountAmount, payAmount: goodsAmount + deliveryFee - discountAmount })
@@ -309,14 +311,15 @@ async function handleMock(config) {
     const items = enrichCart(cartFromStorage()).filter((item) => item.checked)
     if (!items.length) return fail(30004, '请选择结算商品')
     const goodsAmount = items.reduce((sum, item) => sum + item.subtotal, 0)
-    const deliveryFee = body.deliveryType === 'PICKUP' ? 0 : deliveryFeeFor(goodsAmount)
+    const isPickup = Number(body.fulfillType) === 2 || body.deliveryType === 'PICKUP'
+    const deliveryFee = isPickup ? 0 : deliveryFeeFor(goodsAmount)
     const coupon = coupons.find((item) => item.id === Number(body.couponId))
     const discountAmount = coupon && goodsAmount >= coupon.threshold ? coupon.amount : 0
     const address = addressesFromStorage().find((item) => item.id === Number(body.addressId)) || addressesFromStorage()[0]
     const order = {
       orderNo: orderNo(),
       status: 'PENDING_PAYMENT',
-      deliveryType: body.deliveryType || 'DELIVERY',
+      deliveryType: isPickup ? 'PICKUP' : 'DELIVERY',
       items: items.map((item) => ({
         productId: item.product.id,
         name: item.product.name,
@@ -331,7 +334,7 @@ async function handleMock(config) {
       payAmount: goodsAmount + deliveryFee - discountAmount,
       address,
       createdAt: new Date().toLocaleString('zh-CN', { hour12: false }),
-      pickupCode: body.deliveryType === 'PICKUP' ? `A${Math.floor(100 + Math.random() * 900)}` : '',
+      pickupCode: isPickup ? `A${Math.floor(100 + Math.random() * 900)}` : '',
       remark: body.remark || '',
     }
     const list = ordersFromStorage()
@@ -358,7 +361,7 @@ async function handleMock(config) {
     const list = ordersFromStorage()
     const order = list.find((item) => item.orderNo === cancelMatch[1])
     if (!order) return fail(99001, '订单不存在或无权访问')
-    if (!['PENDING_PAYMENT', 'PENDING_SHIPMENT'].includes(order.status)) return fail(30002, '当前订单状态不允许取消')
+    if (!['PENDING_PAYMENT', 'PAID'].includes(order.status)) return fail(30002, '当前订单状态不允许取消')
     order.status = 'CANCELLED'
     write(ORDER_KEY, list)
     return ok(order)
@@ -369,7 +372,7 @@ async function handleMock(config) {
     const list = ordersFromStorage()
     const order = list.find((item) => item.orderNo === confirmMatch[1])
     if (!order) return fail(99001, '订单不存在或无权访问')
-    if (order.status !== 'PENDING_RECEIPT') return fail(30002, '当前订单状态不允许确认收货')
+    if (order.status !== 'DELIVERING') return fail(30002, '当前订单状态不允许确认收货')
     order.status = 'COMPLETED'
     write(ORDER_KEY, list)
     return ok(order)
@@ -380,9 +383,9 @@ async function handleMock(config) {
     const order = list.find((item) => item.orderNo === body.orderNo)
     if (!order) return fail(99001, '订单不存在或无权访问')
     if (order.status !== 'PENDING_PAYMENT') return fail(30002, '当前订单状态不允许支付')
-    order.status = 'PENDING_SHIPMENT'
+    order.status = 'PAID'
     write(ORDER_KEY, list)
-    return ok({ payNo: `PAY${Date.now()}`, orderNo: order.orderNo, amount: order.payAmount, status: 'PAID', method: body.method || 'MOCK' })
+    return ok({ payNo: `PAY${Date.now()}`, orderNo: order.orderNo, amount: order.payAmount, status: 'PAID', channel: Number(body.channel) || 1 })
   }
 
   const paymentMatch = path.match(/^\/payments\/([^/]+)$/)

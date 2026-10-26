@@ -26,9 +26,8 @@ export const useUserStore = defineStore('user', {
       return data
     },
     async register(payload) {
-      const data = await register(payload)
-      this.applySession(data)
-      return data
+      // 注册不签发 Token，注册成功后由页面跳转登录页
+      return await register(payload)
     },
     async fetchProfile() {
       const data = await getMe()

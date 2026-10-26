@@ -19,7 +19,7 @@ async function load() {
 
 async function openForm() {
   const page = await getOrders({ pageNum: 1, pageSize: 50 })
-  orders.value = page.list.filter((order) => ['PENDING_SHIPMENT', 'PENDING_RECEIPT', 'COMPLETED'].includes(order.status))
+  orders.value = page.list.filter((order) => ['PAID', 'DELIVERING', 'COMPLETED'].includes(order.status))
   form.orderNo = orders.value[0]?.orderNo || ''
   showForm.value = true
 }

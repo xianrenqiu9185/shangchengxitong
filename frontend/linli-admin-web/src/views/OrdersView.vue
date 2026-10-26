@@ -90,7 +90,7 @@ onMounted(load)
           <template #default="{ row }">
             <el-button link type="primary" @click="openDetail(row)">详情</el-button>
             <el-button
-              v-if="row.status === 'PENDING_SHIPMENT'"
+              v-if="row.status === 'PAID'"
               v-perm="'trade:order:ship'"
               link
               type="success"

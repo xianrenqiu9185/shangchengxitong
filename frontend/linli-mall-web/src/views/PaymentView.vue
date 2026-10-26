@@ -40,7 +40,8 @@ async function waitForPayment(no) {
 }
 
 async function pay() {
-  const result = await payOrder({ orderNo: order.value.orderNo, method: method.value })
+  // 沙箱统一使用 channel=1；method 仅用于前端展示
+  const result = await payOrder({ orderNo: order.value.orderNo, channel: 1 })
   payNo.value = result.payNo
   if (result.status === 'PAID') {
     paid.value = true

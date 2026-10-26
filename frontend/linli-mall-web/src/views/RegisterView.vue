@@ -24,8 +24,8 @@ async function register() {
     return
   }
   await user.register({ phone: form.phone, password: form.password, nickname: form.nickname })
-  showSuccessToast('注册成功')
-  router.replace('/')
+  showSuccessToast('注册成功，请登录')
+  router.replace({ name: 'login', query: { phone: form.phone } })
 }
 
 const { submitting, run } = useSubmit(register)
@@ -47,7 +47,7 @@ const { submitting, run } = useSubmit(register)
         <van-field v-model="form.confirmPassword" label="确认密码" type="password" placeholder="再次输入密码" />
       </van-cell-group>
       <button class="register-submit" type="submit" :disabled="submitting">
-        {{ submitting ? '注册中…' : '注册并登录' }}
+        {{ submitting ? '注册中…' : '注册' }}
       </button>
     </van-form>
     <p class="register-link">已有账号？<button @click="router.push('/login')">去登录</button></p>

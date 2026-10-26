@@ -81,7 +81,7 @@ onMounted(load)
             去支付
           </van-button>
           <van-button
-            v-if="order.status === 'PENDING_SHIPMENT'"
+            v-if="order.status === 'PAID'"
             size="small"
             round
             plain
@@ -91,7 +91,7 @@ onMounted(load)
             取消订单
           </van-button>
           <van-button
-            v-if="order.status === 'PENDING_RECEIPT'"
+            v-if="order.status === 'DELIVERING'"
             size="small"
             round
             type="primary"

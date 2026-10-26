@@ -10,12 +10,12 @@ import { maskPhone } from '@/utils/format'
 const router = useRouter()
 const user = useUserStore()
 const cart = useCartStore()
-const counts = ref({ PENDING_PAYMENT: 0, PENDING_SHIPMENT: 0, PENDING_RECEIPT: 0 })
+const counts = ref({ PENDING_PAYMENT: 0, PAID: 0, DELIVERING: 0 })
 
 const shortcuts = [
   { label: '待付款', status: 'PENDING_PAYMENT', icon: '💳' },
-  { label: '待发货', status: 'PENDING_SHIPMENT', icon: '📦' },
-  { label: '待收货', status: 'PENDING_RECEIPT', icon: '🚚' },
+  { label: '待发货', status: 'PAID', icon: '📦' },
+  { label: '待收货', status: 'DELIVERING', icon: '🚚' },
   { label: '全部订单', status: '', icon: '🧾' },
 ]
 
@@ -41,7 +41,7 @@ onMounted(async () => {
       if (acc[order.status] !== undefined) acc[order.status] += 1
       return acc
     },
-    { PENDING_PAYMENT: 0, PENDING_SHIPMENT: 0, PENDING_RECEIPT: 0 },
+    { PENDING_PAYMENT: 0, PAID: 0, DELIVERING: 0 },
   )
 })
 </script>

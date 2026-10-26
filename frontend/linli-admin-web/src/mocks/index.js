@@ -153,7 +153,7 @@ async function handleMock(config) {
     return ok({
       todayOrders: today.length,
       todaySales: today.reduce((sum, order) => sum + order.payAmount, 0),
-      pendingShipment: orders.filter((order) => order.status === 'PENDING_SHIPMENT').length,
+      pendingShipment: orders.filter((order) => order.status === 'PAID').length,
       lowStock: productList().filter((product) => product.stock <= 30).length,
       orderTrend: [
         { date: '10-13', orders: 36, sales: 218000 },
@@ -230,8 +230,8 @@ async function handleMock(config) {
     const list = orderList()
     const order = list.find((item) => item.orderNo === shipMatch[1])
     if (!order) return fail(99001, '订单不存在')
-    if (order.status !== 'PENDING_SHIPMENT') return fail(30002, '当前订单状态不允许发货')
-    order.status = 'PENDING_RECEIPT'
+    if (order.status !== 'PAID') return fail(30002, '当前订单状态不允许发货')
+    order.status = 'DELIVERING'
     write(KEYS.orders, list)
     return ok(order)
   }

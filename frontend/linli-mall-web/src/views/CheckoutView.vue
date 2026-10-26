@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { showToast } from 'vant'
 import { createOrder, previewOrder } from '@/api/order'
@@ -24,8 +24,18 @@ const showCoupon = ref(false)
 
 const selectedAddress = () => addresses.value.find((item) => item.id === addressId.value)
 
+const fulfillType = computed(() => (deliveryType.value === 'PICKUP' ? 2 : 1))
+const orderItems = computed(() => cart.selectedItems.map((item) => ({
+  productId: item.product.id,
+  quantity: item.quantity,
+})))
+
 async function loadPreview() {
-  preview.value = await previewOrder({ deliveryType: deliveryType.value, couponId: couponId.value })
+  preview.value = await previewOrder({
+    fulfillType: fulfillType.value,
+    couponId: couponId.value,
+    items: orderItems.value,
+  })
 }
 
 async function submitOrder() {
@@ -35,9 +45,10 @@ async function submitOrder() {
   }
   const order = await createOrder({
     addressId: addressId.value,
-    deliveryType: deliveryType.value,
+    fulfillType: fulfillType.value,
     couponId: couponId.value,
     remark: remark.value,
+    items: orderItems.value,
   })
   await cart.fetch()
   router.replace(`/payment/${order.orderNo}`)

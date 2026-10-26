@@ -35,7 +35,7 @@ const progressSteps = computed(() => {
     },
     { key: 'done', label: '订单完成', desc: '欢迎发表真实评价' },
   ]
-  const activeMap = { PENDING_PAYMENT: 1, PENDING_SHIPMENT: 2, PENDING_RECEIPT: 3, COMPLETED: 4 }
+  const activeMap = { PENDING_PAYMENT: 1, PAID: 2, DELIVERING: 3, COMPLETED: 4 }
   const active = activeMap[order.value.status] ?? 0
   return steps.map((step, index) => ({
     ...step,
@@ -70,7 +70,7 @@ onMounted(load)
     <template v-if="order">
       <section class="status-card" :style="{ background: `linear-gradient(135deg, ${status.color}, ${status.color}cc)` }">
         <span>{{ status.label }}</span>
-        <h1>{{ order.status === 'PENDING_PAYMENT' ? '请尽快完成支付' : order.status === 'PENDING_RECEIPT' ? '商品正在配送中' : order.status === 'COMPLETED' ? '订单已完成' : '订单处理中' }}</h1>
+        <h1>{{ order.status === 'PENDING_PAYMENT' ? '请尽快完成支付' : order.status === 'DELIVERING' ? '商品正在配送中' : order.status === 'COMPLETED' ? '订单已完成' : '订单处理中' }}</h1>
         <p>订单号 {{ order.orderNo }}</p>
       </section>
 
@@ -129,13 +129,13 @@ onMounted(load)
       </section>
 
       <div class="order-footer-actions">
-        <van-button v-if="['PENDING_PAYMENT', 'PENDING_SHIPMENT'].includes(order.status)" round plain @click="cancel">
+        <van-button v-if="['PENDING_PAYMENT', 'PAID'].includes(order.status)" round plain @click="cancel">
           取消订单
         </van-button>
         <van-button v-if="order.status === 'PENDING_PAYMENT'" round type="primary" @click="router.push(`/payment/${order.orderNo}`)">
           去支付
         </van-button>
-        <van-button v-if="order.status === 'PENDING_RECEIPT'" round type="primary" @click="confirm">确认收货</van-button>
+        <van-button v-if="order.status === 'DELIVERING'" round type="primary" @click="confirm">确认收货</van-button>
         <van-button
           v-if="order.status === 'COMPLETED'"
           round

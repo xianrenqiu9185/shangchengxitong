@@ -232,7 +232,7 @@ function orderItem(productId, quantity) {
 export const seedOrders = [
   {
     orderNo: 'LL202610180001',
-    status: 'PENDING_RECEIPT',
+    status: 'DELIVERING',
     deliveryType: 'DELIVERY',
     items: [orderItem(101, 1), orderItem(103, 2)],
     goodsAmount: 5570,
