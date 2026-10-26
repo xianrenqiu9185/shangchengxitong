@@ -11,6 +11,37 @@ const route = useRoute()
 const router = useRouter()
 const order = ref(null)
 const status = computed(() => orderStatusMap[order.value?.status] || { label: '', color: '#6b7280' })
+const progressSteps = computed(() => {
+  if (!order.value) return []
+  const createdAt = formatDate(order.value.createdAt)
+  if (order.value.status === 'CANCELLED') {
+    return [
+      { key: 'created', label: '提交订单', desc: createdAt, state: 'done' },
+      { key: 'cancelled', label: '订单已关闭', desc: '库存已释放', state: 'current' },
+    ]
+  }
+  const steps = [
+    { key: 'created', label: '提交订单', desc: createdAt },
+    { key: 'paid', label: '支付成功', desc: '支付结果已确认' },
+    {
+      key: 'fulfilling',
+      label: order.value.deliveryType === 'PICKUP' ? '备货完成，待自提' : '商家已发货',
+      desc: order.value.deliveryType === 'PICKUP' ? '请到门店出示核销码' : '商品正在配送途中',
+    },
+    {
+      key: 'received',
+      label: order.value.deliveryType === 'PICKUP' ? '到店核销' : '确认收货',
+      desc: order.value.deliveryType === 'PICKUP' ? '出示核销码完成取货' : '商品送达后确认收货',
+    },
+    { key: 'done', label: '订单完成', desc: '欢迎发表真实评价' },
+  ]
+  const activeMap = { PENDING_PAYMENT: 1, PENDING_SHIPMENT: 2, PENDING_RECEIPT: 3, COMPLETED: 4 }
+  const active = activeMap[order.value.status] ?? 0
+  return steps.map((step, index) => ({
+    ...step,
+    state: index < active ? 'done' : index === active ? 'current' : 'pending',
+  }))
+})
 
 async function load() {
   order.value = await getOrder(route.params.orderNo)
@@ -41,6 +72,19 @@ onMounted(load)
         <span>{{ status.label }}</span>
         <h1>{{ order.status === 'PENDING_PAYMENT' ? '请尽快完成支付' : order.status === 'PENDING_RECEIPT' ? '商品正在配送中' : order.status === 'COMPLETED' ? '订单已完成' : '订单处理中' }}</h1>
         <p>订单号 {{ order.orderNo }}</p>
+      </section>
+
+      <section class="detail-card progress-card">
+        <h2>订单进度</h2>
+        <div class="progress-list">
+          <div v-for="step in progressSteps" :key="step.key" class="progress-step" :class="step.state">
+            <i>{{ step.state === 'done' ? '✓' : step.state === 'current' ? '•' : '' }}</i>
+            <div>
+              <b>{{ step.label }}</b>
+              <span>{{ step.desc }}</span>
+            </div>
+          </div>
+        </div>
       </section>
 
       <section v-if="order.pickupCode" class="pickup-card">
@@ -175,6 +219,62 @@ onMounted(load)
 .detail-card h2 {
   margin: 0 0 12px;
   font-size: 15px;
+}
+
+.progress-list {
+  display: grid;
+  gap: 15px;
+}
+
+.progress-step {
+  display: grid;
+  grid-template-columns: 25px 1fr;
+  gap: 10px;
+  align-items: start;
+  opacity: 0.42;
+}
+
+.progress-step.done,
+.progress-step.current {
+  opacity: 1;
+}
+
+.progress-step i {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  background: #f0f1ec;
+  color: #9aa29c;
+  place-items: center;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 700;
+}
+
+.progress-step.done i {
+  background: #eaf7ee;
+  color: #1f8a4c;
+}
+
+.progress-step.current i {
+  background: #1f8a4c;
+  color: #fff;
+  box-shadow: 0 0 0 5px rgba(31, 138, 76, 0.12);
+}
+
+.progress-step div {
+  display: grid;
+  gap: 3px;
+}
+
+.progress-step b {
+  font-size: 12px;
+}
+
+.progress-step span {
+  color: #8a948c;
+  font-size: 10px;
 }
 
 .address-line {

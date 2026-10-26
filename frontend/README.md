@@ -79,3 +79,23 @@ cd ../linli-admin-web && npm run build
 ```
 
 产物分别位于两个工程的 `dist/` 目录。
+
+## 静态演示部署
+
+不依赖后端时，使用 demo 模式构建；该模式强制启用本地 mock：
+
+```bash
+cd frontend/linli-mall-web && npm run build:demo
+cd ../linli-admin-web && npm run build:demo
+```
+
+两个工程的 `public/_redirects` 会随构建进入 `dist/`，用于 Netlify 等静态平台的 SPA 深链接回退。
+
+快速分享步骤：
+
+1. 打开 [Netlify Drop](https://app.netlify.com/drop)。
+2. 将 `frontend/linli-mall-web/dist` 拖入，得到一个 C 端链接。
+3. 将 `frontend/linli-admin-web/dist` 拖入，得到另一个后台链接。
+4. 把两个链接和演示账号一起发给老师或组员。
+
+当前 demo 数据保存在访问者浏览器 `localStorage`，不会写入后端数据库。正式部署与 Docker/Nginx 仍由 D 负责。
