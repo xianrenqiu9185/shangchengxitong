@@ -84,7 +84,7 @@ export default function (data) {
 
   const body = JSON.stringify({
     items: [{ productId: PRODUCT_ID, quantity: 1 }],
-    deliveryType: 1,
+    fulfillType: 2,
   });
 
   const res = http.post(`${BASE_URL}/api/v1/orders`, body, {
