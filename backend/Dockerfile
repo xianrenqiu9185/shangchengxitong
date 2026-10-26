@@ -4,6 +4,7 @@
 # 说明：基础镜像沿用仓库 Docker Hub 镜像站约定（public.ecr.aws）。
 # ============================================================
 ARG MAVEN_IMAGE=public.ecr.aws/docker/library/maven:3.9-eclipse-temurin-17
+ARG JRE_IMAGE=public.ecr.aws/docker/library/eclipse-temurin:17-jre-alpine
 FROM ${MAVEN_IMAGE} AS build
 WORKDIR /build
 
@@ -14,7 +15,6 @@ RUN mvn -B -q dependency:go-offline
 COPY src ./src
 RUN mvn -B -q -DskipTests package
 
-ARG JRE_IMAGE=public.ecr.aws/docker/library/eclipse-temurin:17-jre-alpine
 FROM ${JRE_IMAGE}
 WORKDIR /app
 
