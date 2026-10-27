@@ -16,6 +16,7 @@ import com.linli.mall.order.enums.OrderStatus;
 import com.linli.mall.order.mapper.OrderItemMapper;
 import com.linli.mall.order.mapper.OrderMapper;
 import com.linli.mall.order.service.OrderService;
+import com.linli.mall.order.support.OrderAmounts;
 import com.linli.mall.product.entity.Product;
 import com.linli.mall.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -84,6 +85,8 @@ public class OrderServiceImpl implements OrderService {
         }
 
         // 3. 创建订单与订单项
+        long deliveryFee = OrderAmounts.deliveryFee(request.getFulfillType(), totalAmount);
+        long payAmount = totalAmount + deliveryFee;
         Order order = new Order();
         order.setOrderNo(orderNo);
         order.setUserId(userId);
@@ -91,7 +94,7 @@ public class OrderServiceImpl implements OrderService {
         order.setFulfillType(request.getFulfillType());
         order.setTotalAmount(totalAmount);
         order.setDiscountAmount(0L);
-        order.setPayAmount(totalAmount);
+        order.setPayAmount(payAmount);
         // TODO 优惠券核销接入后，discountAmount / payAmount 需按最终金额复算
         order.setCouponId(request.getCouponId());
         order.setStatus(OrderStatus.PENDING_PAYMENT.getCode());

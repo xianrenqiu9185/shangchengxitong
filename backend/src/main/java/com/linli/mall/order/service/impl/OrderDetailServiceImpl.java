@@ -101,9 +101,13 @@ public class OrderDetailServiceImpl implements OrderDetailService {
         String pickupCode = "PICKUP".equals(deliveryType)
                 ? "A" + order.getOrderNo().substring(Math.max(0, order.getOrderNo().length() - 3))
                 : null;
+        long deliveryFee = order.getPayAmount() - order.getTotalAmount() + order.getDiscountAmount();
+        if (deliveryFee < 0) {
+            deliveryFee = 0L;
+        }
 
         return new OrderDetailView(order.getOrderNo(), OrderStatus.of(order.getStatus()).name(),
-                deliveryType, order.getFulfillType(), order.getTotalAmount(), 0L,
+                deliveryType, order.getFulfillType(), order.getTotalAmount(), deliveryFee,
                 order.getDiscountAmount(), order.getPayAmount(), customer, phone,
                 address, pickupCode, order.getRemark(), order.getCreateTime(), itemViews);
     }
