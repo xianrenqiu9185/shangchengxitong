@@ -9,8 +9,11 @@ import com.linli.mall.common.exception.BizException;
 import com.linli.mall.order.dto.CreateOrderRequest;
 import com.linli.mall.order.dto.CreateOrderResponse;
 import com.linli.mall.order.dto.OrderDetailView;
+import com.linli.mall.order.dto.OrderPreviewView;
+import com.linli.mall.order.dto.PreviewOrderRequest;
 import com.linli.mall.order.service.OrderDetailService;
 import com.linli.mall.order.service.OrderManagementService;
+import com.linli.mall.order.service.OrderPreviewService;
 import com.linli.mall.order.service.OrderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,6 +34,13 @@ public class OrderController {
     private final OrderService orderService;
     private final OrderDetailService orderDetailService;
     private final OrderManagementService orderManagementService;
+    private final OrderPreviewService orderPreviewService;
+
+    @PostMapping("/preview")
+    @RequirePermission("trade:order:create")
+    public Result<OrderPreviewView> preview(@Valid @RequestBody PreviewOrderRequest request) {
+        return Result.ok(orderPreviewService.preview(request));
+    }
 
     @GetMapping
     public Result<PageResult<OrderDetailView>> list(
