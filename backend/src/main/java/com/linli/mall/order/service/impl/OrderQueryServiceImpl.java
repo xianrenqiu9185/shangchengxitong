@@ -35,4 +35,13 @@ public class OrderQueryServiceImpl implements OrderQueryService {
         }
         return order;
     }
+
+    @Override
+    public Order getById(Long orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new BizException(ErrorCode.NOT_FOUND);
+        }
+        return order;
+    }
 }

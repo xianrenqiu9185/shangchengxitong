@@ -5,3 +5,11 @@ logging:
 mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+# 本地联调：支付 2 分钟超时、10 秒扫描一次，便于演示超时关单
+order:
+  pay:
+    timeout:
+      minutes: 2
+  timeout:
+    scan-interval-ms: 10000
