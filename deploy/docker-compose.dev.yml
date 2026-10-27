@@ -1,0 +1,51 @@
+# ============================================================
+# 邻里鲜生 · 本地开发依赖（MySQL 8.0 + Redis 7）
+# 启动：docker compose -f deploy/docker-compose.dev.yml up -d
+# 停止：docker compose -f deploy/docker-compose.dev.yml down
+# 清空数据：docker compose -f deploy/docker-compose.dev.yml down -v
+#
+# 镜像说明：Docker Hub 在部分网络下不可达，统一使用 AWS ECR Public
+# 的 Docker 官方镜像镜像站（支持 linux/arm64）：
+#   public.ecr.aws/docker/library/<image>:<tag>
+# 如你的网络可直连 Docker Hub，可改回 mysql:8.0 / redis:7-alpine。
+# ============================================================
+name: linli-fresh-dev
+
+services:
+  mysql:
+    image: public.ecr.aws/docker/library/mysql:8.0
+    container_name: linli-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: linli_fresh
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot123456"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: public.ecr.aws/docker/library/redis:7-alpine
+    container_name: linli-redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  mysql-data:
+  redis-data:
