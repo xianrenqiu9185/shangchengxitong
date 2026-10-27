@@ -19,6 +19,7 @@ import com.linli.mall.order.service.OrderService;
 import com.linli.mall.product.entity.Product;
 import com.linli.mall.product.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,10 +35,8 @@ public class OrderServiceImpl implements OrderService {
 
     private static final String BIZ_TYPE_ORDER_CREATE = "ORDER_CREATE";
 
-    /**
-     * TODO 改为从 t_system_config 读取 order.pay.timeout.minutes。
-     */
-    private static final int PAY_TIMEOUT_MINUTES = 30;
+    @Value("${order.pay.timeout.minutes:30}")
+    private int payTimeoutMinutes;
 
     private static final DateTimeFormatter ORDER_NO_TIME_FORMAT =
             DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
@@ -96,7 +95,7 @@ public class OrderServiceImpl implements OrderService {
         // TODO 优惠券核销接入后，discountAmount / payAmount 需按最终金额复算
         order.setCouponId(request.getCouponId());
         order.setStatus(OrderStatus.PENDING_PAYMENT.getCode());
-        order.setPayDeadline(LocalDateTime.now().plusMinutes(PAY_TIMEOUT_MINUTES));
+        order.setPayDeadline(LocalDateTime.now().plusMinutes(payTimeoutMinutes));
         order.setRemark(request.getRemark());
         orderMapper.insert(order);
 

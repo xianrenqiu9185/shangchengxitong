@@ -16,4 +16,9 @@ public interface OrderQueryService {
      * 按单号查询（内部使用，不校验归属）。
      */
     Order getByOrderNo(String orderNo);
+
+    /**
+     * 按主键查询（内部使用）。
+     */
+    Order getById(Long orderId);
 }

@@ -46,6 +46,19 @@ springdoc:
   swagger-ui:
     path: /api/v1/doc/ui.html
 
+payment:
+  sandbox:
+    callback-delay-ms: 2000
+    callback-interval-ms: 1000
+    batch-size: 50
+
+order:
+  pay:
+    timeout:
+      minutes: 30
+  timeout:
+    scan-interval-ms: 60000
+
 logging:
   level:
     com.linli.mall: info
