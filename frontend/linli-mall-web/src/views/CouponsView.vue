@@ -10,9 +10,15 @@ const available = ref([])
 const mine = ref([])
 
 async function load() {
-  const [list, myList] = await Promise.all([getCoupons(), getMyCoupons()])
-  available.value = list
-  mine.value = myList
+  try {
+    const [list, myList] = await Promise.all([getCoupons(), getMyCoupons()])
+    available.value = list || []
+    mine.value = myList || []
+  } catch {
+    // 营销接口属于 P2，未就绪时保留空态，不影响主闭环。
+    available.value = []
+    mine.value = []
+  }
 }
 
 async function receive(coupon) {
