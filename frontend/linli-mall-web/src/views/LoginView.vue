@@ -8,7 +8,7 @@ import { useSubmit } from '@/composables/useSubmit'
 const route = useRoute()
 const router = useRouter()
 const user = useUserStore()
-const form = reactive({ phone: '13800000003', password: '123456' })
+const form = reactive({ phone: String(route.query.phone || '13800000003'), password: '123456' })
 
 async function login() {
   if (!/^1\d{10}$/.test(form.phone)) {

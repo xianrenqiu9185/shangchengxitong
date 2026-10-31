@@ -15,8 +15,12 @@ async function register() {
     showToast('请输入 11 位手机号')
     return
   }
-  if (form.password.length < 6) {
-    showToast('密码至少 6 位')
+  if (form.password.length < 8 || form.password.length > 32) {
+    showToast('密码长度需为 8–32 位')
+    return
+  }
+  if (!/^(?=.*[A-Za-z])(?=.*\d).+$/.test(form.password)) {
+    showToast('密码必须同时包含字母和数字')
     return
   }
   if (form.password !== form.confirmPassword) {
@@ -43,7 +47,7 @@ const { submitting, run } = useSubmit(register)
       <van-cell-group inset>
         <van-field v-model="form.nickname" label="昵称" placeholder="怎么称呼你（选填）" />
         <van-field v-model="form.phone" label="手机号" type="tel" maxlength="11" placeholder="请输入手机号" />
-        <van-field v-model="form.password" label="密码" type="password" placeholder="至少 6 位" />
+        <van-field v-model="form.password" label="密码" type="password" placeholder="8–32 位，含字母和数字" />
         <van-field v-model="form.confirmPassword" label="确认密码" type="password" placeholder="再次输入密码" />
       </van-cell-group>
       <button class="register-submit" type="submit" :disabled="submitting">

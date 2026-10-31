@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
-import { cancelOrder, confirmOrder, getOrder } from '@/api/order'
+import { cancelOrder, confirmOrder, getOrder, pickupOrder } from '@/api/order'
 import { deliveryTypes, orderStatusMap } from '@/utils/dict'
 import { formatDate, formatPrice } from '@/utils/format'
 import AppHeader from '@/components/AppHeader.vue'
@@ -10,6 +10,7 @@ import AppHeader from '@/components/AppHeader.vue'
 const route = useRoute()
 const router = useRouter()
 const order = ref(null)
+const mockFeatures = import.meta.env.VITE_USE_MOCK !== 'false'
 const status = computed(() => orderStatusMap[order.value?.status] || { label: '', color: '#6b7280' })
 const progressSteps = computed(() => {
   if (!order.value) return []
@@ -58,6 +59,13 @@ async function confirm() {
   await showConfirmDialog({ title: '确认收货', message: '确认已收到全部商品吗？' })
   await confirmOrder(order.value.orderNo)
   showToast('已确认收货')
+  await load()
+}
+
+async function pickup() {
+  await showConfirmDialog({ title: '确认自提', message: '请确认已在门店取到商品。' })
+  await pickupOrder(order.value.orderNo)
+  showToast('自提成功')
   await load()
 }
 
@@ -135,9 +143,24 @@ onMounted(load)
         <van-button v-if="order.status === 'PENDING_PAYMENT'" round type="primary" @click="router.push(`/payment/${order.orderNo}`)">
           去支付
         </van-button>
-        <van-button v-if="order.status === 'DELIVERING'" round type="primary" @click="confirm">确认收货</van-button>
         <van-button
-          v-if="order.status === 'COMPLETED'"
+          v-if="order.status === 'DELIVERING' && order.deliveryType !== 'PICKUP'"
+          round
+          type="primary"
+          @click="confirm"
+        >
+          确认收货
+        </van-button>
+        <van-button
+          v-if="order.status === 'DELIVERING' && order.deliveryType === 'PICKUP'"
+          round
+          type="primary"
+          @click="pickup"
+        >
+          确认自提
+        </van-button>
+        <van-button
+          v-if="mockFeatures && order.status === 'COMPLETED'"
           round
           type="primary"
           @click="router.push({ name: 'review-create', query: { orderNo: order.orderNo } })"

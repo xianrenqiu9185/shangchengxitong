@@ -2,7 +2,7 @@
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
-import { cancelOrder, confirmOrder, getOrders } from '@/api/order'
+import { cancelOrder, confirmOrder, getOrders, pickupOrder } from '@/api/order'
 import { orderStatuses } from '@/utils/dict'
 import AppHeader from '@/components/AppHeader.vue'
 import OrderCard from '@/components/OrderCard.vue'
@@ -12,6 +12,7 @@ const route = useRoute()
 const active = ref(String(route.query.status || ''))
 const orders = ref([])
 const loading = ref(false)
+const mockFeatures = import.meta.env.VITE_USE_MOCK !== 'false'
 
 async function load() {
   loading.value = true
@@ -34,6 +35,13 @@ async function confirm(order) {
   await showConfirmDialog({ title: '确认收货', message: '请确认已收到商品，确认后订单将完成。' })
   await confirmOrder(order.orderNo)
   showToast('已确认收货')
+  await load()
+}
+
+async function pickup(order) {
+  await showConfirmDialog({ title: '确认自提', message: '请确认已在门店取到商品。' })
+  await pickupOrder(order.orderNo)
+  showToast('自提成功')
   await load()
 }
 
@@ -91,7 +99,7 @@ onMounted(load)
             取消订单
           </van-button>
           <van-button
-            v-if="order.status === 'DELIVERING'"
+            v-if="order.status === 'DELIVERING' && order.deliveryType !== 'PICKUP'"
             size="small"
             round
             type="primary"
@@ -100,7 +108,16 @@ onMounted(load)
             确认收货
           </van-button>
           <van-button
-            v-if="order.status === 'COMPLETED'"
+            v-if="order.status === 'DELIVERING' && order.deliveryType === 'PICKUP'"
+            size="small"
+            round
+            type="primary"
+            @click="pickup(order)"
+          >
+            确认自提
+          </van-button>
+          <van-button
+            v-if="mockFeatures && order.status === 'COMPLETED'"
             size="small"
             round
             type="primary"

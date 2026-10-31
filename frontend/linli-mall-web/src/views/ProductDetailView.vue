@@ -29,12 +29,15 @@ async function addToCart(goCheckout = false) {
 
 onMounted(async () => {
   try {
-    const [item, reviewPage] = await Promise.all([
-      getProduct(route.params.id),
-      getProductReviews(route.params.id),
-    ])
+    const item = await getProduct(route.params.id)
     product.value = item
-    reviews.value = reviewPage.list
+    try {
+      const reviewPage = await getProductReviews(route.params.id)
+      reviews.value = reviewPage.list || []
+    } catch {
+      // 评价属于 P2，接口未就绪时不能阻塞商品详情。
+      reviews.value = []
+    }
   } catch {
     showToast('商品不存在或已下架')
   } finally {
