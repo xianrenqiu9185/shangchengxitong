@@ -81,7 +81,30 @@ mysql -uroot -p linli_fresh < docs/sql/init_data.sql
 
 ### 4. 启动
 
-后端、前端与 Docker 启动命令在各工程脚手架完成后补充到本节与《部署运维手册》。
+前端两个工程已搭建完成，默认使用本地 mock，可独立运行：
+
+```bash
+cd frontend/linli-mall-web
+npm install
+npm run dev
+```
+
+访问 `http://localhost:5173`，演示账号 `13800000003 / 123456`。
+
+```bash
+cd frontend/linli-admin-web
+npm install
+npm run dev
+```
+
+访问 `http://localhost:5174`。后台演示账号：
+
+| 账号 | 手机号 | 口令 | 角色 |
+| --- | --- | --- | --- |
+| 管理员 | 13800000001 | 123456 | 平台管理员 |
+| 运营 | 13800000002 | 123456 | 商家运营 |
+
+更完整的 mock 说明、接口切换方式和构建命令见 [前端工程说明](frontend/README.md)。后端与 Docker 启动命令在对应工程完成后补充。
 
 ## 团队分工
 

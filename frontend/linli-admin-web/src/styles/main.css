@@ -1,0 +1,121 @@
+:root {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  color: #1b2a22;
+  background: #f4f6f3;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --admin-green: #1f8a4c;
+  --admin-green-dark: #163d2a;
+  --admin-paper: #f4f6f3;
+  --admin-line: #e6ebe5;
+  --admin-muted: #7b887f;
+  --el-color-primary: #1f8a4c;
+  --el-color-primary-light-3: #4ca571;
+  --el-color-primary-light-5: #78bb93;
+  --el-color-primary-light-7: #a8d4b8;
+  --el-color-primary-light-9: #eaf6ee;
+  --el-border-radius-base: 10px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background:
+    radial-gradient(circle at 90% 0%, rgba(31, 138, 76, 0.07), transparent 28%),
+    var(--admin-paper);
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+.page-shell {
+  padding: 24px;
+}
+
+.page-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.page-title-row h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  letter-spacing: -0.01em;
+}
+
+.page-title-row p {
+  margin: 0;
+  color: var(--admin-muted);
+  font-size: 12px;
+}
+
+.panel {
+  border: 1px solid var(--admin-line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 26px rgba(24, 48, 33, 0.04);
+}
+
+.filter-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 15px;
+}
+
+.filter-panel .el-input,
+.filter-panel .el-select {
+  width: 210px;
+}
+
+.table-panel {
+  overflow: hidden;
+}
+
+.table-panel .el-table {
+  --el-table-header-bg-color: #f7f9f7;
+  --el-table-border-color: #edf1ed;
+}
+
+.table-panel .el-table th.el-table__cell {
+  color: #66736b;
+  font-weight: 600;
+}
+
+.table-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 16px;
+}
+
+.muted {
+  color: var(--admin-muted);
+}
+
+@media (max-width: 980px) {
+  .page-shell {
+    padding: 16px;
+  }
+
+  .filter-panel .el-input,
+  .filter-panel .el-select {
+    width: 100%;
+  }
+}
