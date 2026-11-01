@@ -39,12 +39,12 @@ async function loadPreview() {
 }
 
 async function submitOrder() {
-  if (!addressId.value) {
+  if (!addressId.value && deliveryType.value !== 'PICKUP') {
     showToast('请选择收货地址')
     return
   }
   const order = await createOrder({
-    addressId: addressId.value,
+    addressId: deliveryType.value === 'PICKUP' ? null : addressId.value,
     fulfillType: fulfillType.value,
     couponId: couponId.value,
     remark: remark.value,
@@ -67,10 +67,13 @@ onMounted(async () => {
     router.replace('/cart')
     return
   }
-  const [addressList, couponList] = await Promise.all([getAddresses(), getMyCoupons()])
-  addresses.value = addressList
-  coupons.value = couponList
-  addressId.value = addressList.find((item) => item.isDefault)?.id || addressList[0]?.id || null
+  const [addressList, couponList] = await Promise.all([
+    getAddresses(),
+    getMyCoupons().catch(() => []),
+  ])
+  addresses.value = addressList || []
+  coupons.value = couponList || []
+  addressId.value = addressList?.find((item) => item.isDefault)?.id || addressList?.[0]?.id || null
   await loadPreview()
 })
 </script>
@@ -79,8 +82,15 @@ onMounted(async () => {
   <div class="page checkout-page">
     <AppHeader title="确认订单" />
 
-    <section class="checkout-card address-card" @click="showAddress = true">
-      <div v-if="selectedAddress()">
+    <section class="checkout-card address-card" @click="deliveryType === 'DELIVERY' && (showAddress = true)">
+      <div v-if="deliveryType === 'PICKUP'">
+        <div class="address-line">
+          <b>邻里鲜生超市前台</b>
+          <em>自提点</em>
+        </div>
+        <p>到店后凭订单核销码取货</p>
+      </div>
+      <div v-else-if="selectedAddress()">
         <div class="address-line">
           <b>{{ selectedAddress().receiver }}</b>
           <span>{{ selectedAddress().phone }}</span>
@@ -89,7 +99,7 @@ onMounted(async () => {
         <p>{{ selectedAddress().province }}{{ selectedAddress().city }}{{ selectedAddress().district }}{{ selectedAddress().detail }}</p>
       </div>
       <div v-else class="address-empty">请选择收货地址</div>
-      <span class="chevron">›</span>
+      <span v-if="deliveryType === 'DELIVERY'" class="chevron">›</span>
     </section>
 
     <section class="checkout-card">

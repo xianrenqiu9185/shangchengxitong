@@ -27,6 +27,7 @@ service.interceptors.response.use(
   (response) => {
     const payload = response.data || {}
     if (payload.code === 0) return payload.data
+    const silent = response.config?.silent === true
 
     if (payload.code === 10002) {
       clearToken()
@@ -39,7 +40,7 @@ service.interceptors.response.use(
       }
     } else if (payload.code === 10003) {
       showToast('暂无操作权限')
-    } else {
+    } else if (!silent) {
       const trace = payload.traceId ? `（${payload.traceId}）` : ''
       showToast(`${payload.message || '请求失败'}${trace}`)
     }
@@ -47,10 +48,11 @@ service.interceptors.response.use(
     return Promise.reject(payload)
   },
   (error) => {
+    const silent = error.config?.silent === true
     if (error.response?.status === 401) {
       clearToken()
       router.replace({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } })
-    } else {
+    } else if (!silent) {
       showToast(error.message || '网络异常，请稍后重试')
     }
     return Promise.reject(error)

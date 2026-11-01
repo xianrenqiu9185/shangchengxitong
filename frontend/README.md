@@ -53,6 +53,17 @@ VITE_USE_MOCK=true
 
 联调时改为 `VITE_USE_MOCK=false`，并确保后端运行在 `http://localhost:8080`，Vite 会把 `/api` 代理到后端。
 
+不修改默认开发配置时，也可以直接使用 staging 模式：
+
+```bash
+cd frontend/linli-mall-web
+npm run dev:real
+```
+
+管理后台对应命令为 `npm run dev:real`，端口 `5174`。staging 模式会读取 `.env.staging`，关闭 mock 并代理到本机 `8080` 后端。
+
+真实模式下优先保障 C 端主闭环。营销、评价、后台统计和系统管理等 P2 模块的后端接口尚未全部就绪；前端已对优惠券、商品评价加载做可选降级，避免它们阻塞商品详情和结算主流程。
+
 mock 数据保存在浏览器 `localStorage`。需要恢复初始数据时，清除下列键后刷新页面：
 
 - `linli_mock_cart_v1`
