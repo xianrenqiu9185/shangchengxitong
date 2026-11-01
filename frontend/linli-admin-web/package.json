@@ -8,8 +8,10 @@
   },
   "scripts": {
     "dev": "vite --port 5174",
+    "dev:real": "vite --mode staging --port 5174",
     "build": "vite build",
     "build:demo": "vite build --mode demo",
+    "build:staging": "vite build --mode staging",
     "preview": "vite preview --port 4174"
   },
   "dependencies": {

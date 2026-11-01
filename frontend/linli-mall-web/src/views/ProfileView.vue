@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog } from 'vant'
 import { getOrders } from '@/api/order'
@@ -25,6 +25,8 @@ const menus = [
   { label: '优惠券', desc: '领取与查看我的优惠券', icon: '🎟️', to: '/coupons' },
   { label: '售后服务', desc: '退款、退货与处理进度', icon: '🛠️', to: '/after-sales' },
 ]
+const mockFeatures = import.meta.env.VITE_USE_MOCK !== 'false'
+const visibleMenus = computed(() => menus.filter((item) => mockFeatures || item.to !== '/coupons'))
 
 async function logout() {
   await showConfirmDialog({ title: '退出登录', message: '确认退出当前账号吗？' })
@@ -82,7 +84,7 @@ onMounted(async () => {
     </section>
 
     <section class="menu-list">
-      <button v-for="item in menus" :key="item.label" @click="router.push(item.to)">
+      <button v-for="item in visibleMenus" :key="item.label" @click="router.push(item.to)">
         <span class="menu-icon">{{ item.icon }}</span>
         <div><b>{{ item.label }}</b><p>{{ item.desc }}</p></div>
         <em>›</em>
