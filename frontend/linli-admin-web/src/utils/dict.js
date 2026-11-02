@@ -10,6 +10,8 @@ export const afterSaleStatusMap = {
   PENDING: { label: '待审核', type: 'warning' },
   APPROVED: { label: '已同意', type: 'success' },
   REJECTED: { label: '已驳回', type: 'danger' },
+  REFUNDING: { label: '退款中', type: 'primary' },
+  COMPLETED: { label: '退款完成', type: 'success' },
 }
 
 export const deliveryTypes = {

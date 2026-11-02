@@ -16,7 +16,10 @@ const statusOptions = Object.entries(orderStatusMap).map(([value, item]) => ({ v
 async function load() {
   loading.value = true
   try {
-    const data = await getOrders(query)
+    const params = { pageNum: 1, pageSize: 50 }
+    if (query.status) params.status = query.status
+    if (query.keyword) params.keyword = query.keyword
+    const data = await getOrders(params)
     rows.value = data.list
   } finally {
     loading.value = false
