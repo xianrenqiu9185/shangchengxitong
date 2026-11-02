@@ -21,6 +21,7 @@ const remark = ref('')
 const preview = ref(null)
 const showAddress = ref(false)
 const showCoupon = ref(false)
+const mockMode = import.meta.env.VITE_USE_MOCK !== 'false'
 
 const selectedAddress = () => addresses.value.find((item) => item.id === addressId.value)
 
@@ -69,7 +70,7 @@ onMounted(async () => {
   }
   const [addressList, couponList] = await Promise.all([
     getAddresses(),
-    getMyCoupons().catch(() => []),
+    mockMode ? getMyCoupons().catch(() => []) : Promise.resolve([]),
   ])
   addresses.value = addressList || []
   coupons.value = couponList || []
@@ -123,7 +124,7 @@ onMounted(async () => {
       </article>
     </section>
 
-    <section class="checkout-card option-card" @click="showCoupon = true">
+    <section v-if="mockMode" class="checkout-card option-card" @click="showCoupon = true">
       <span>优惠券</span>
       <b>{{ coupons.find((item) => item.id === couponId)?.name || (coupons.length ? '选择优惠券' : '暂无可用') }}</b>
       <em>›</em>
@@ -166,7 +167,7 @@ onMounted(async () => {
       </div>
     </van-popup>
 
-    <van-popup v-model:show="showCoupon" position="bottom" round>
+    <van-popup v-if="mockMode" v-model:show="showCoupon" position="bottom" round>
       <div class="popup-content">
         <h2>选择优惠券</h2>
         <article
