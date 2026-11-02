@@ -8,6 +8,7 @@ const route = useRoute()
 const router = useRouter()
 const user = useUserStore()
 const loading = ref(false)
+const landing = import.meta.env.VITE_USE_MOCK === 'false' ? '/orders' : '/dashboard'
 const form = reactive({ phone: '13800000001', password: '123456' })
 
 async function submit() {
@@ -15,7 +16,7 @@ async function submit() {
   try {
     await user.login(form)
     ElMessage.success('登录成功')
-    router.replace(String(route.query.redirect || '/dashboard'))
+    router.replace(String(route.query.redirect || landing))
   } finally {
     loading.value = false
   }
