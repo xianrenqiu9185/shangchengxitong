@@ -62,7 +62,24 @@ npm run dev:real
 
 管理后台对应命令为 `npm run dev:real`，端口 `5174`。staging 模式会读取 `.env.staging`，关闭 mock 并代理到本机 `8080` 后端。
 
-真实模式下优先保障 C 端主闭环。营销、评价、后台统计和系统管理等 P2 模块的后端接口尚未全部就绪；前端已对优惠券、商品评价加载做可选降级，避免它们阻塞商品详情和结算主流程。
+如果后端通过隧道或远程地址提供，不修改 Vite 配置，启动时传入代理目标：
+
+```bash
+cd frontend/linli-mall-web
+VITE_API_PROXY=https://your-staging-host.example npm run dev
+
+cd frontend/linli-admin-web
+VITE_API_PROXY=https://your-staging-host.example npm run dev
+```
+
+访问 `http://localhost:5173` 和 `http://localhost:5174`。`.env.development.local` 中保持：
+
+```env
+VITE_API_BASE_URL=/api/v1
+VITE_USE_MOCK=false
+```
+
+最终真实演示范围：评价、后台会员、角色权限和账号管理已恢复；优惠券、后台库存、系统配置、日志审计和经营看板继续隐藏。商品或订单图片为空时使用本地 `images/placeholder.svg` 占位。
 
 mock 数据保存在浏览器 `localStorage`。需要恢复初始数据时，清除下列键后刷新页面：
 

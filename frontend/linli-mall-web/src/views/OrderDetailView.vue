@@ -4,13 +4,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { cancelOrder, confirmOrder, getOrder, pickupOrder } from '@/api/order'
 import { deliveryTypes, orderStatusMap } from '@/utils/dict'
-import { formatDate, formatPrice } from '@/utils/format'
+import { formatDate, formatPrice, resolveImage } from '@/utils/format'
 import AppHeader from '@/components/AppHeader.vue'
 
 const route = useRoute()
 const router = useRouter()
 const order = ref(null)
-const mockFeatures = import.meta.env.VITE_USE_MOCK !== 'false'
 const status = computed(() => orderStatusMap[order.value?.status] || { label: '', color: '#6b7280' })
 const progressSteps = computed(() => {
   if (!order.value) return []
@@ -116,7 +115,7 @@ onMounted(load)
       <section class="detail-card">
         <h2>商品清单</h2>
         <article v-for="item in order.items" :key="item.productId" class="item-row">
-          <img :src="item.image" :alt="item.name" />
+          <img :src="resolveImage(item.image)" :alt="item.name" />
           <div><b>{{ item.name }}</b><span>{{ item.unit }} × {{ item.quantity }}</span></div>
           <strong>¥{{ formatPrice(item.price * item.quantity) }}</strong>
         </article>
@@ -160,7 +159,7 @@ onMounted(load)
           确认自提
         </van-button>
         <van-button
-          v-if="mockFeatures && order.status === 'COMPLETED'"
+          v-if="order.status === 'COMPLETED'"
           round
           type="primary"
           @click="router.push({ name: 'review-create', query: { orderNo: order.orderNo } })"

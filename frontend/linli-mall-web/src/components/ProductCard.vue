@@ -1,5 +1,5 @@
 <script setup>
-import { formatPrice } from '@/utils/format'
+import { formatPrice, resolveImage } from '@/utils/format'
 
 defineProps({
   product: { type: Object, required: true },
@@ -11,7 +11,7 @@ defineEmits(['add'])
 <template>
   <article class="product-card" @click="$router.push(`/products/${product.id}`)">
     <div class="product-media">
-      <img :src="product.image" :alt="product.name" loading="lazy" />
+      <img :src="resolveImage(product.image)" :alt="product.name" loading="lazy" />
       <span v-if="product.tags?.length" class="product-tag">{{ product.tags[0] }}</span>
     </div>
     <div class="product-body">

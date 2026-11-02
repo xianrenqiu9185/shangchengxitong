@@ -9,7 +9,7 @@ import {
   updateProduct,
   updateProductStatus,
 } from '@/api/admin'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, resolveImage } from '@/utils/format'
 
 const rows = ref([])
 const total = ref(0)
@@ -146,7 +146,7 @@ onMounted(async () => {
         <el-table-column label="商品" min-width="240">
           <template #default="{ row }">
             <div class="product-cell">
-              <img :src="row.image" :alt="row.name" />
+              <img :src="resolveImage(row.image)" :alt="row.name" />
               <div><b>{{ row.name }}</b><span>{{ row.subtitle }}</span></div>
             </div>
           </template>

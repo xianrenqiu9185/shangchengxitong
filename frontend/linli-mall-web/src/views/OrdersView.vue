@@ -12,7 +12,6 @@ const route = useRoute()
 const active = ref(String(route.query.status || ''))
 const orders = ref([])
 const loading = ref(false)
-const mockFeatures = import.meta.env.VITE_USE_MOCK !== 'false'
 
 async function load() {
   loading.value = true
@@ -117,7 +116,7 @@ onMounted(load)
             确认自提
           </van-button>
           <van-button
-            v-if="mockFeatures && order.status === 'COMPLETED'"
+            v-if="order.status === 'COMPLETED'"
             size="small"
             round
             type="primary"

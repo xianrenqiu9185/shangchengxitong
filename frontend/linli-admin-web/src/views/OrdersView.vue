@@ -3,7 +3,7 @@ import { onMounted, reactive, ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { closeOrder, getOrder, getOrders, shipOrder } from '@/api/admin'
 import { deliveryTypes, orderStatusMap } from '@/utils/dict'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, resolveImage } from '@/utils/format'
 
 const rows = ref([])
 const loading = ref(false)
@@ -131,7 +131,7 @@ onMounted(load)
         <h3 class="drawer-title">商品清单</h3>
         <div class="order-items">
           <article v-for="item in current.items" :key="item.productId">
-            <img :src="item.image" :alt="item.name" />
+            <img :src="resolveImage(item.image)" :alt="item.name" />
             <div><b>{{ item.name }}</b><span>{{ item.unit }} × {{ item.quantity }}</span></div>
             <strong>¥{{ formatPrice(item.price * item.quantity) }}</strong>
           </article>

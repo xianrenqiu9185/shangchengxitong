@@ -5,7 +5,7 @@ import { showToast } from 'vant'
 import { getCategories, getProducts } from '@/api/product'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, resolveImage } from '@/utils/format'
 import ProductCard from '@/components/ProductCard.vue'
 import SectionHead from '@/components/SectionHead.vue'
 
@@ -105,7 +105,7 @@ onMounted(load)
           class="flash-card"
           @click="router.push(`/products/${product.id}`)"
         >
-          <img :src="product.image" :alt="product.name" />
+          <img :src="resolveImage(product.image)" :alt="product.name" />
           <div>
             <b>{{ product.name }}</b>
             <span class="price"><small>¥</small>{{ formatPrice(product.price) }}</span>

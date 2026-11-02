@@ -1,6 +1,6 @@
 <script setup>
 import { computed } from 'vue'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, resolveImage } from '@/utils/format'
 import { orderStatusMap } from '@/utils/dict'
 
 const props = defineProps({
@@ -19,7 +19,7 @@ const count = computed(() => props.order.items.reduce((sum, item) => sum + item.
     </header>
     <div class="order-items">
       <div v-for="item in order.items.slice(0, 3)" :key="item.productId" class="order-item">
-        <img :src="item.image" :alt="item.name" />
+        <img :src="resolveImage(item.image)" :alt="item.name" />
         <div>
           <p>{{ item.name }}</p>
           <span>{{ item.unit }} × {{ item.quantity }}</span>

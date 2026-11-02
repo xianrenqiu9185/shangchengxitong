@@ -3,7 +3,7 @@ import { computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { showConfirmDialog, showToast } from 'vant'
 import { useCartStore } from '@/stores/cart'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, resolveImage } from '@/utils/format'
 import AppHeader from '@/components/AppHeader.vue'
 
 const router = useRouter()
@@ -61,7 +61,7 @@ onMounted(() => cart.fetch())
             shape="round"
             @update:model-value="cart.update(item.id, { checked: $event })"
           />
-          <img :src="item.product.image" :alt="item.product.name" />
+          <img :src="resolveImage(item.product.image)" :alt="item.product.name" />
           <div class="cart-info">
             <h3>{{ item.product.name }}</h3>
             <p>{{ item.product.unit }}</p>

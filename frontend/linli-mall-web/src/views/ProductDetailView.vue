@@ -5,7 +5,7 @@ import { showSuccessToast, showToast } from 'vant'
 import { getProduct, getProductReviews } from '@/api/product'
 import { useCartStore } from '@/stores/cart'
 import { useUserStore } from '@/stores/user'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, resolveImage } from '@/utils/format'
 import AppHeader from '@/components/AppHeader.vue'
 
 const route = useRoute()
@@ -16,7 +16,6 @@ const product = ref(null)
 const reviews = ref([])
 const quantity = ref(1)
 const loading = ref(true)
-const mockMode = import.meta.env.VITE_USE_MOCK !== 'false'
 
 async function addToCart(goCheckout = false) {
   if (!user.token) {
@@ -32,14 +31,11 @@ onMounted(async () => {
   try {
     const item = await getProduct(route.params.id)
     product.value = item
-    if (mockMode) {
-      try {
+    try {
       const reviewPage = await getProductReviews(route.params.id)
       reviews.value = reviewPage.list || []
-      } catch {
-        // 评价属于 P2，接口未就绪时不能阻塞商品详情。
-        reviews.value = []
-      }
+    } catch {
+      reviews.value = []
     }
   } catch {
     showToast('商品不存在或已下架')
@@ -56,7 +52,7 @@ onMounted(async () => {
     </div>
     <van-skeleton v-if="loading" title :row="6" />
     <template v-else-if="product">
-      <img class="detail-image" :src="product.image" :alt="product.name" />
+      <img class="detail-image" :src="resolveImage(product.image)" :alt="product.name" />
       <section class="detail-card">
         <div class="price-row">
           <span class="price"><small>¥</small>{{ formatPrice(product.price) }}</span>
@@ -74,7 +70,7 @@ onMounted(async () => {
         </div>
       </section>
 
-      <section v-if="mockMode" class="detail-card section-card">
+      <section class="detail-card section-card">
         <h2>商品介绍</h2>
         <p>{{ product.description }}</p>
       </section>
