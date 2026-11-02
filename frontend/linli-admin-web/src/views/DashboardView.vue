@@ -6,7 +6,7 @@ import { GridComponent, TooltipComponent } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 import { getDashboard } from '@/api/admin'
 import { orderStatusMap } from '@/utils/dict'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, resolveImage } from '@/utils/format'
 
 echarts.use([LineChart, GridComponent, TooltipComponent, CanvasRenderer])
 
@@ -110,7 +110,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="stock-list">
           <article v-for="product in data?.lowStockProducts || []" :key="product.id">
-            <img :src="product.image" :alt="product.name" />
+            <img :src="resolveImage(product.image)" :alt="product.name" />
             <div><b>{{ product.name }}</b><span>{{ product.categoryName }}</span></div>
             <em>{{ product.stock }} 件</em>
           </article>

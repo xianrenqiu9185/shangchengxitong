@@ -5,6 +5,7 @@ import { showSuccessToast, showToast } from 'vant'
 import { getOrder } from '@/api/order'
 import { createReview } from '@/api/review'
 import { useSubmit } from '@/composables/useSubmit'
+import { resolveImage } from '@/utils/format'
 import AppHeader from '@/components/AppHeader.vue'
 
 const route = useRoute()
@@ -83,7 +84,7 @@ onMounted(async () => {
           :class="{ active: productId === item.productId }"
           @click="productId = item.productId"
         >
-          <img :src="item.image" :alt="item.name" />
+          <img :src="resolveImage(item.image)" :alt="item.name" />
           <div><b>{{ item.name }}</b><span>{{ item.unit }} × {{ item.quantity }}</span></div>
           <em>{{ productId === item.productId ? '已选择' : '选择' }}</em>
         </button>

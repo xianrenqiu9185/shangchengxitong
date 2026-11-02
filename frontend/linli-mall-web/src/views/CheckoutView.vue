@@ -7,7 +7,7 @@ import { getAddresses } from '@/api/user'
 import { getMyCoupons } from '@/api/marketing'
 import { useCartStore } from '@/stores/cart'
 import { useSubmit } from '@/composables/useSubmit'
-import { formatPrice } from '@/utils/format'
+import { formatPrice, resolveImage } from '@/utils/format'
 import AppHeader from '@/components/AppHeader.vue'
 
 const router = useRouter()
@@ -115,7 +115,7 @@ onMounted(async () => {
     <section class="checkout-card items-card">
       <h2>商品清单</h2>
       <article v-for="item in cart.selectedItems" :key="item.id" class="checkout-item">
-        <img :src="item.product.image" :alt="item.product.name" />
+        <img :src="resolveImage(item.product.image)" :alt="item.product.name" />
         <div>
           <b>{{ item.product.name }}</b>
           <span>{{ item.product.unit }} × {{ item.quantity }}</span>
