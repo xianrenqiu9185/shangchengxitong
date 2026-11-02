@@ -16,6 +16,7 @@ const product = ref(null)
 const reviews = ref([])
 const quantity = ref(1)
 const loading = ref(true)
+const mockMode = import.meta.env.VITE_USE_MOCK !== 'false'
 
 async function addToCart(goCheckout = false) {
   if (!user.token) {
@@ -31,12 +32,14 @@ onMounted(async () => {
   try {
     const item = await getProduct(route.params.id)
     product.value = item
-    try {
+    if (mockMode) {
+      try {
       const reviewPage = await getProductReviews(route.params.id)
       reviews.value = reviewPage.list || []
-    } catch {
-      // 评价属于 P2，接口未就绪时不能阻塞商品详情。
-      reviews.value = []
+      } catch {
+        // 评价属于 P2，接口未就绪时不能阻塞商品详情。
+        reviews.value = []
+      }
     }
   } catch {
     showToast('商品不存在或已下架')
@@ -71,7 +74,7 @@ onMounted(async () => {
         </div>
       </section>
 
-      <section class="detail-card section-card">
+      <section v-if="mockMode" class="detail-card section-card">
         <h2>商品介绍</h2>
         <p>{{ product.description }}</p>
       </section>

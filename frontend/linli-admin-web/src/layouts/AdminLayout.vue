@@ -24,24 +24,25 @@ const route = useRoute()
 const router = useRouter()
 const user = useUserStore()
 const collapsed = ref(false)
+const mockMode = import.meta.env.VITE_USE_MOCK !== 'false'
 
 const menuItems = [
-  { path: '/dashboard', label: '经营看板', icon: DataLine, perm: 'statistics:dashboard:view' },
+  { path: '/dashboard', label: '经营看板', icon: DataLine, perm: 'statistics:dashboard:view', mockOnly: true },
   { path: '/products', label: '商品管理', icon: Goods, perm: 'product:goods:manage' },
   { path: '/categories', label: '分类管理', icon: Grid, perm: 'product:category:manage' },
-  { path: '/inventory', label: '库存管理', icon: Box, perm: 'stock:info:view' },
+  { path: '/inventory', label: '库存管理', icon: Box, perm: 'stock:info:view', mockOnly: true },
   { path: '/orders', label: '订单管理', icon: List, perm: 'trade:order:query' },
   { path: '/after-sales', label: '售后管理', icon: ChatDotRound, perm: 'after:sale:audit' },
-  { path: '/coupons', label: '优惠券管理', icon: Tickets, perm: 'marketing:coupon:manage' },
-  { path: '/reviews', label: '评价管理', icon: ChatDotRound, perm: 'review:goods:reply' },
-  { path: '/members', label: '会员管理', icon: User, perm: 'user:member:manage' },
-  { path: '/roles', label: '角色权限', icon: Lock, perm: 'system:role:manage' },
-  { path: '/configs', label: '系统配置', icon: Setting, perm: 'system:config:manage' },
-  { path: '/logs', label: '日志审计', icon: Document, perm: 'system:log:audit' },
+  { path: '/coupons', label: '优惠券管理', icon: Tickets, perm: 'marketing:coupon:manage', mockOnly: true },
+  { path: '/reviews', label: '评价管理', icon: ChatDotRound, perm: 'review:goods:reply', mockOnly: true },
+  { path: '/members', label: '会员管理', icon: User, perm: 'user:member:manage', mockOnly: true },
+  { path: '/roles', label: '角色权限', icon: Lock, perm: 'system:role:manage', mockOnly: true },
+  { path: '/configs', label: '系统配置', icon: Setting, perm: 'system:config:manage', mockOnly: true },
+  { path: '/logs', label: '日志审计', icon: Document, perm: 'system:log:audit', mockOnly: true },
   { path: '/accounts', label: '账号管理', icon: UserFilled, perm: 'system:account:manage' },
 ]
 
-const visibleMenu = computed(() => menuItems.filter((item) => user.hasPerm(item.perm)))
+const visibleMenu = computed(() => menuItems.filter((item) => user.hasPerm(item.perm) && (mockMode || !item.mockOnly)))
 const pageTitle = computed(() => route.meta.title || '运营后台')
 const today = new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric', weekday: 'long' }).format(new Date())
 
