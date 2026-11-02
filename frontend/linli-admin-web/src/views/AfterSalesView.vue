@@ -15,7 +15,9 @@ const auditForm = reactive({ approved: true, remark: '' })
 async function load() {
   loading.value = true
   try {
-    const data = await getAfterSales(query)
+    const params = {}
+    if (query.status) params.status = query.status
+    const data = await getAfterSales(params)
     rows.value = data.list
   } finally {
     loading.value = false

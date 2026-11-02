@@ -13,6 +13,8 @@ const statusMeta = computed(() => {
     PENDING: { label: '等待平台审核', color: '#ff8a3d', desc: '平台会在 24 小时内处理你的申请' },
     APPROVED: { label: '审核已通过', color: '#1f8a4c', desc: '退款将按原支付方式退回' },
     REJECTED: { label: '申请已驳回', color: '#8a948c', desc: '如有疑问可联系门店客服' },
+    REFUNDING: { label: '退款处理中', color: '#2d7ff9', desc: '平台正在调用沙箱退款' },
+    COMPLETED: { label: '退款已完成', color: '#1f8a4c', desc: '退款已按原支付方式退回' },
   }
   return map[record.value?.status] || { label: record.value?.status || '', color: '#8a948c', desc: '' }
 })
@@ -46,7 +48,13 @@ onMounted(async () => {
         <div class="timeline">
           <div class="step done"><i>✓</i><div><b>提交售后申请</b><span>{{ record.createdAt }}</span></div></div>
           <div class="step" :class="{ done: record.status !== 'PENDING' }"><i>{{ record.status === 'PENDING' ? '2' : '✓' }}</i><div><b>平台审核</b><span>{{ record.status === 'PENDING' ? '等待处理中' : statusMeta.label }}</span></div></div>
-          <div class="step" :class="{ done: record.status === 'APPROVED' }"><i>{{ record.status === 'APPROVED' ? '✓' : '3' }}</i><div><b>退款到账</b><span>{{ record.status === 'APPROVED' ? '退款已发起' : '审核通过后处理' }}</span></div></div>
+          <div class="step" :class="{ done: ['APPROVED', 'REFUNDING', 'COMPLETED'].includes(record.status) }">
+            <i>{{ record.status === 'COMPLETED' ? '✓' : record.status === 'REFUNDING' ? '•' : '3' }}</i>
+            <div>
+              <b>退款到账</b>
+              <span>{{ record.status === 'COMPLETED' ? '退款已完成' : record.status === 'REFUNDING' ? '退款处理中' : record.status === 'APPROVED' ? '退款已发起' : '审核通过后处理' }}</span>
+            </div>
+          </div>
         </div>
       </section>
 

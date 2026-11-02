@@ -11,6 +11,13 @@ const router = useRouter()
 const orders = ref([])
 const showForm = ref(false)
 const form = reactive({ orderNo: '', type: 'REFUND', reason: '', description: '' })
+const statusLabels = {
+  PENDING: '待审核',
+  APPROVED: '已同意',
+  REJECTED: '已驳回',
+  REFUNDING: '退款中',
+  COMPLETED: '退款完成',
+}
 
 async function load() {
   const page = await getAfterSales()
@@ -48,7 +55,7 @@ onMounted(load)
 
     <div v-if="records.length" class="after-sale-list">
       <article v-for="record in records" :key="record.saleNo" class="after-sale-card">
-        <div><b>{{ record.type === 'RETURN' ? '退货退款' : '仅退款' }}</b><em>{{ record.status === 'PENDING' ? '待审核' : record.status }}</em></div>
+        <div><b>{{ record.type === 'RETURN' ? '退货退款' : '仅退款' }}</b><em>{{ statusLabels[record.status] || record.status }}</em></div>
         <p>{{ record.reason }}</p>
         <div class="after-sale-foot">
           <span>订单 {{ record.orderNo }} · {{ record.createdAt }}</span>
