@@ -78,6 +78,39 @@ jobs:
           path: backend/target/*.jar
           if-no-files-found: error
 
+  frontend:
+    name: 前端构建（${{ matrix.app }}）
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [linli-mall-web, linli-admin-web]
+    steps:
+      - name: 拉取代码
+        uses: actions/checkout@v4
+
+      - name: 安装 Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/${{ matrix.app }}/package-lock.json
+
+      - name: 安装依赖
+        working-directory: frontend/${{ matrix.app }}
+        run: npm ci
+
+      - name: 构建
+        working-directory: frontend/${{ matrix.app }}
+        run: npm run build
+
+      - name: 归档构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.app }}-dist
+          path: frontend/${{ matrix.app }}/dist
+          if-no-files-found: error
+
   docker:
     name: 构建后端镜像
     runs-on: ubuntu-latest
