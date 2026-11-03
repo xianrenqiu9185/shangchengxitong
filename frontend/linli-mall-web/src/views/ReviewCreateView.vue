@@ -12,7 +12,7 @@ const route = useRoute()
 const router = useRouter()
 const order = ref(null)
 const productId = ref(null)
-const form = reactive({ rating: 5, content: '', anonymous: false })
+const form = reactive({ rating: 5, content: '' })
 const loading = ref(true)
 
 const selectedItem = computed(() => order.value?.items.find((item) => item.productId === productId.value))
@@ -31,7 +31,6 @@ async function submit() {
     productId: productId.value,
     rating: form.rating,
     content: form.content.trim(),
-    anonymous: form.anonymous,
   })
   showSuccessToast('评价已发布')
   router.replace(`/products/${productId.value}`)
@@ -106,10 +105,6 @@ onMounted(async () => {
           show-word-limit
           placeholder="说说商品的新鲜度、口感、包装和配送体验..."
         />
-        <div class="anonymous-row">
-          <div><b>匿名评价</b><span>其他邻居将看不到你的昵称</span></div>
-          <van-switch v-model="form.anonymous" size="22px" />
-        </div>
       </section>
 
       <section v-if="selectedItem" class="review-note">

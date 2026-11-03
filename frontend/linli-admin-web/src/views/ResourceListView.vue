@@ -29,7 +29,9 @@ async function load() {
   if (!resource.value) return
   loading.value = true
   try {
-    const data = await getResource(resource.value.endpoint, { keyword: query.keyword })
+    const params = {}
+    if (query.keyword) params.keyword = query.keyword
+    const data = await getResource(resource.value.endpoint, params)
     rows.value = Array.isArray(data) ? data : data.list || []
   } finally {
     loading.value = false
