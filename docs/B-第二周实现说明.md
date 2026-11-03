@@ -1,9 +1,9 @@
 # 负责人 B 第二周实现说明（Day 8–13）
 
 > 范围：售后联调、商品评价、评价回复、会员管理、角色权限管理、后台账号管理与安全自查。
-> 基线：`origin/develop`（`bfb70e4`）。
-> 开发分支：`feature/b-week2`。
-> 结论：B 的第二周后端功能已完成，纯单元测试 `46/46` 通过；需要 MySQL、Redis 的全链路集成测试待本机中间件凭据配置正确后执行。
+> 基线：`main`（`f9b411e`，已包含 `origin/develop` `d1c492a`）。
+> 开发分支：`feature/b-week2-integration`。
+> 结论：B 的第二周后端功能已完成，**69 个测试全部通过（69/69）**；已在 MySQL 26.7 + Redis 5.0.14.1 真实环境下完成评价、售后、会员、角色、账号的端到端联调。
 
 ---
 
@@ -191,8 +191,10 @@ A 已在 `develop` 提供以下实现，B 的售后模块通过 Port 自动注�
 ## 七、数据契约与兼容说明
 
 - `t_review.images` 为 JSON 字符串数组，序列化后长度不得超过 1000。
-- `t_user` 没有最近登录时间字段，`AccountView.lastLoginAt` 当前返回 `null`。
-- 请求体保留 C 端 `anonymous` 字段以兼容现有前端；冻结 DDL 没有匿名列，本期不持久化匿名标记。
+- `t_user` 没有最近登录时间字段，`AccountView.lastLoginAt` 当前返回 `null`（C 端展示 `-` 可接受）。
+- 请求体保留 C 端 `anonymous` 字段以兼容现有前端；冻结 DDL 没有匿名列，**本期不承诺匿名评价**，建议 C 端隐藏“匿名评价”开关。
+- `ReviewCreateRequest.content` 已加 `@NotBlank`，空白内容返回 `10001`，与 C 端表单校验保持一致。
+- 后台会员、账号、评价列表默认 `pageSize=10`；数据量超过 10 条时前端需要传分页参数。
 - 会员等级由累计消费实时计算，不新增数据库字段。
 - 订单聚合 SQL 通过 MyBatis 动态脚本验证：`user_id IN (?, ?, ...)` 可正确展开。
 
@@ -217,45 +219,99 @@ A 已在 `develop` 提供以下实现，B 的售后模块通过 Port 自动注�
 
 ## 九、验证
 
-### 9.1 编译
+### 9.1 联调环境
 
-- JDK：Temurin 17.0.20.1。
-- 主代码：185 个 Java 源文件，全部生成 class。
-- 当前沙箱中 Maven 在关闭依赖 JAR 时触发 `zipfs AccessDeniedException`；代码无 `error:`，改用同一 JDK 17、同一依赖清单完成测试编译。
+| 组件 | 版本 / 配置 | 状态 |
+| --- | --- | --- |
+| JDK | Temurin 17.0.20.1 | 正常 |
+| MySQL | 26.7.0，`127.0.0.1:3307`，库 `linli_fresh` | `UP`，20 张表 |
+| Redis | 5.0.14.1，`127.0.0.1:6379` | `UP` |
+| 后端 | Spring Boot 3.3.5，`http://localhost:8080` | `UP` |
+| 初始化数据 | `docs/sql/schema.sql` + `docs/sql/init_data.sql` | 3 个测试账号、6 个商品 |
 
-### 9.2 单元测试
+`GET /actuator/health` 返回 `db=UP`、`redis=UP`、`ping=UP`。
 
-第二周新增测试：
+> 联调使用隔离的 3307 实例，避免改动本机已有 MySQL 数据；应用通过 `SPRING_DATASOURCE_URL / SPRING_DATASOURCE_USERNAME / SPRING_DATASOURCE_PASSWORD` 覆盖连接。
 
-- `ReviewServiceTest`：5 个。
-- `MemberServiceTest`：4 个。
-- `RoleAdminServiceTest`：9 个。
-- `AccountServiceTest`：6 个。
+### 9.2 编译与测试
 
-B 的纯单元测试合计 46 个，覆盖第一周基线 22 个与第二周新增 24 个。
+- 主代码 185 个源文件、测试代码 15 个类，全部编译通过。
+- 测试结果：**Tests run: 69, Failures: 0, Errors: 0, Skipped: 0**。
+- 测试类：`AfterSaleServiceTest`、`CartServiceTest`、`IdempotencyServiceTest`、`InventoryServiceTest`、`OrderManagementTest`、`OrderPreviewTest`、`OrderServiceTest`、`PaymentServiceTest`、`CategoryServiceTest`、`ReviewServiceTest`、`AccountServiceTest`、`AddressServiceTest`、`MemberServiceTest`、`RoleAdminServiceTest`、`UserServiceTest`。
+- `InventoryServiceTest`、`OrderManagementTest`、`OrderPreviewTest`、`OrderServiceTest`、`PaymentServiceTest` 为 `@SpringBootTest`，本轮已连接真实 MySQL/Redis 执行，不再列为“待执行”。
 
-```bash
-cd backend
-mvn -Dtest=AccountServiceTest,AddressServiceTest,AfterSaleServiceTest,CartServiceTest,CategoryServiceTest,IdempotencyServiceTest,MemberServiceTest,ReviewServiceTest,RoleAdminServiceTest,UserServiceTest test
-```
+> 本机沙箱内 Maven 编译插件在关闭依赖 JAR 时触发 `zipfs AccessDeniedException`（环境限制，不是代码错误）。为拿到可信结果，使用同一 JDK 17、同一 `pom.xml` 依赖清单完成 javac 编译，并用 JUnit Platform Launcher 执行全部测试；在普通开发机上直接运行 `mvn test` 即可。
 
-结果：`Tests run: 46, Failures: 0, Errors: 0, Skipped: 0`。
+### 9.3 真实联调证据（2026-11-02）
 
-### 9.3 中间件集成
+联调脚本：`backend/scripts/b-week2-integration.ps1`（按真实 HTTP 调用，不使用直接写库造数据）。
+会员 `13800000003 / 123456`，管理员 `13800000001 / 123456`。
 
-本机检查结果：
+| # | 用例 | 请求 | HTTP | 业务码 | 结果 |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 商品 6 评价 | `POST /api/v1/reviews`，订单 `ORD20261102192857411102` | 200 | 0 | 评价 ID `1` |
+| 2 | 运营回复评价 | `POST /api/v1/admin/reviews/1/reply` | 200 | 0 | 公开列表可见 `reply` |
+| 3 | 公开评价列表 | `GET /api/v1/products/6/reviews` | 200 | 0 | 2 条，2 条均含回复 |
+| 4 | 重复评价同一订单项 | `POST /api/v1/reviews` | 200 | `60002` | 重复评价 |
+| 5 | 已退款订单评价 | `POST /api/v1/reviews`，订单 `ORD20261102192905287533` | 200 | `60003` | 订单或订单项不可评价 |
+| 6 | 评价他人订单 | 路人账号 `13900000009` 评价会员 3 的订单 | 200 | `60003` | 订单或订单项不可评价 |
+| 7 | 空内容 | `content="   "` | 200 | `10001` | `content: 评价内容不能为空` |
+| 8 | 缺评分 | 不传 `rating/score` | 200 | `10001` | `评分不能为空` |
+| 9 | 图片地址超长 | 单张 520+ 字符 | 200 | `10001` | `images[0]: 图片地址过长` |
+| 10 | 新建运营账号 | `POST /api/v1/admin/accounts` | 200 | 0 | 账号 ID `5`，手机号 `13900000001` |
+| 11 | 新账号登录 | `POST /api/v1/auth/login` | 200 | 0 | 获得 Token |
+| 12 | 禁用账号 | `PUT /api/v1/admin/accounts/5/status {status:0}` | 200 | 0 | 禁用成功 |
+| 13 | 禁用后旧 Token | `GET /api/v1/admin/reviews` | 200 | `10002` | 立即失效 |
+| 14 | 禁用后登录 | `POST /api/v1/auth/login` | 200 | `10005` | 账号已被禁用 |
+| 15 | 重新启用并登录 | `PUT .../status {status:1}` + 登录 | 200 | 0 / 0 | 恢复可用 |
+| 16 | 运营角色备份 | `GET /api/v1/admin/roles` | 200 | 0 | 运营 11 个权限点 |
+| 17 | 去掉 `review:goods:reply` | `PUT /api/v1/admin/roles/2/permissions` | 200 | 0 | 剩余 10 个 |
+| 18 | 下一次请求立即生效 | 运营访问 `GET /api/v1/admin/reviews` | 200 | `10003` | 无操作权限 |
+| 19 | 恢复运营权限 | `PUT /api/v1/admin/roles/2/permissions` | 200 | 0 | 恢复 11 个，请求恢复 0 |
+| 20 | 管理员不被降权 | `PUT /api/v1/admin/roles/3/permissions {permissions:[]}` | 200 | 0 | 仍为 28 个权限点 |
+| 21 | 会员不能进后台 | 会员访问 `GET /api/v1/admin/members` | 200 | `10003` | 无操作权限 |
+| 22 | 不能禁用当前管理员 | `PUT /api/v1/admin/accounts/1/status {status:0}` | 200 | `10001` | 不能禁用当前登录账号 |
+| 23 | 禁用会员 3 | `PUT /api/v1/admin/members/3/status {status:0}` | 200 | 0 | 禁用成功 |
+| 24 | 会员旧 Token | `GET /api/v1/orders` | 200 | `10002` | 立即失效 |
+| 25 | 恢复会员 3 | `PUT /api/v1/admin/members/3/status {status:1}` | 200 | 0 | 恢复启用 |
 
-- MySQL 服务运行中，但项目默认 `root / root123456` 被实例拒绝。
-- Redis 服务未启动。
-- A 的 `OrderManagementTest`、`OrderPreviewTest`、`OrderServiceTest`、`PaymentServiceTest` 与 `InventoryServiceTest` 需要真实中间件，本轮未纳入通过统计。
+说明：
 
-因此本周验证结论限定为“模块单元测试通过，全链路集成待环境修复后执行”，不把环境连接失败误报为业务测试通过。
+- 本项目的业务异常统一返回 HTTP 200 + 业务码，因此“HTTP 200 + 非 0 业务码”是预期行为，不是接口错误。
+- “最后一个管理员不能被禁用”在 API 层由“不允许禁用当前登录账号”+“至少保留一个启用管理员”双重保护；由于禁用他人必须由另一名管理员操作，HTTP 层无法构造出“最后一个管理员被他人禁用”的路径，该分支由 `AccountServiceTest` 覆盖，代码位于 `AccountServiceImpl#updateStatus`。
+
+### 9.4 演示数据
+
+真实下单链路（下单 → 沙箱支付 → 管理员发货 → 会员确认收货）生成：
+
+| 订单号 | 商品 | 金额（分） | 状态 | 用途 |
+| --- | --- | --- | --- | --- |
+| `ORD20261102192857411102` | 6 抽纸 | 1990 | 已完成 | 评价 1 |
+| `ORD20261102192900271174` | 6 抽纸 | 1990 | 已完成 | 评价 2 |
+| `ORD20261102192902288162` | 2 海南香蕉 | 990 | 已完成 | 评价 3 |
+| `ORD20261102192905287533` | 1 红富士苹果 | 1290 | 已退款 | 退款负向用例 |
+
+| 评价 ID | 商品 | 评分 | 回复 |
+| --- | --- | --- | --- |
+| 1 | 6 抽纸 | 5 | 已回复 |
+| 2 | 6 抽纸 | 4 | 已回复 |
+| 3 | 2 海南香蕉 | 5 | 已回复 |
+
+商品 6 的公开评价页有 2 条评价且均已回复，可直接用于 D 的演示视频。
+
+### 9.5 已知限制
+
+- 匿名评价：`t_review` 无 `anonymous` 列，本期不持久化、不承诺；建议 C 端隐藏开关。
+- `AccountView.lastLoginAt` 固定返回 `null`。
+- 后台列表默认 `pageSize=10`，超过 10 条需前端传分页参数。
+- 本次联调数据库为隔离的 3307 实例；若改用本机 3306，请通过环境变量提供正确口令。
 
 ---
 
 ## 十、遗留与交接
 
-1. 合并到 `develop` 前需由 A 评审订单聚合 SQL 与订单/退款 Port 联调边界。
-2. 若后续 DDL 增加匿名评价、最近登录时间字段，可替换当前兼容行为。
-3. 本机 MySQL 凭据与 Redis 启动属于 D 的环境配置项；修复后应执行全量 Spring Boot 集成测试。
-4. 自定义角色已支持创建与权限分配；若后续允许后台账号绑定自定义角色，需要同步调整账号创建校验与前端角色下拉。
+1. 合并到 `main` 前由 A 评审 PR `feature/b-week2-integration`，重点看评价订单校验、角色权限边界与账号禁用逻辑。
+2. 匿名评价、最近登录时间如需落地，应先改 DDL，再同步 C 端。
+3. 给 D 的联调证据：评价 ID `1/2/3`、错误码 `60002/60003/10001/10002/10003/10005`、账号 ID `5`、会员 ID `3`、运营角色权限 11→10→11、管理员权限 28。
+4. 自定义角色已支持创建与授权；后续若允许后台账号绑定自定义角色，需要同步调整账号创建校验与角色下拉。
+

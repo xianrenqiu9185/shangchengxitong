@@ -95,7 +95,7 @@ src/main/java/com/linli/mall/
 - 登录成功后写入 Redis：`auth:session:{token} → userId:userType:roleId`（TTL 2 小时，滑动续期）。
 - 请求头：`Authorization: Bearer <token>`。
 - `AuthInterceptor` 负责：取 Token → 查 Redis → 写入 `UserContext` → 校验 `@RequirePermission`。
-- 权限点校验由 `PermissionChecker` 提供实现（用户/RBAC 模块负责）；未提供实现时仅做登录校验并打印警告。
+- 权限点校验由 `RbacPermissionChecker` 基于 `t_role_permission` 与 Redis 缓存实现；仅在实现缺失时跳过校验并打印警告。
 - 公开路径已在 `WebConfig` 排除：`/api/v1/health`、`/api/v1/auth/login`、`/api/v1/auth/register`、`/api/v1/products/**`、`/api/v1/categories/**`、`/api/v1/doc/**`。
 - 注销接口仍要求携带有效 Token，由 `AuthInterceptor` 先完成登录校验。
 

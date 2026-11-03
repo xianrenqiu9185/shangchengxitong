@@ -18,8 +18,8 @@ import java.time.Duration;
  * 统一鉴权拦截器（方案 B：随机 Token 存 Redis）。
  *
  * <p>会话值约定：userId:userType:roleId，由用户模块登录时写入
- * auth:session:{token}；本脚手架只做契约与登录校验，RBAC 校验由
- * PermissionChecker 实现补全。</p>
+ * auth:session:{token}；本拦截器完成登录态校验，RBAC 校验由
+ * PermissionChecker 实现（RbacPermissionChecker）完成。</p>
  */
 @Slf4j
 @Component
@@ -73,7 +73,7 @@ public class AuthInterceptor implements HandlerInterceptor {
             if (requirePermission != null) {
                 PermissionChecker checker = permissionCheckerProvider.getIfAvailable();
                 if (checker == null) {
-                    log.warn("PermissionChecker 尚未实现，跳过权限点校验：{}", requirePermission.value());
+                    log.warn("PermissionChecker 未注册，跳过权限点校验：{}", requirePermission.value());
                 } else if (!checker.hasPermission(roleId, requirePermission.value())) {
                     throw new BizException(ErrorCode.FORBIDDEN);
                 }
