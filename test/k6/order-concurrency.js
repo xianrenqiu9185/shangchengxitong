@@ -33,19 +33,29 @@ const orderLatency = new Trend('order_latency', true);
 const bizFailRate = new Rate('order_biz_fail');
 
 export const options = {
+  // SHAPE=constant 时按恒定 TARGET_TPS 压测（用于验证峰值吞吐）
   scenarios: {
-    order_burst: {
-      executor: 'ramping-arrival-rate',
-      startRate: 10,
-      timeUnit: '1s',
-      preAllocatedVUs: Number(__ENV.PRE_VUS || 100),
-      maxVUs: Number(__ENV.MAX_VUS || 400),
-      stages: [
-        { target: TARGET_TPS, duration: '30s' },
-        { target: TARGET_TPS, duration: `${HOLD_SECONDS}s` },
-        { target: 0, duration: '10s' },
-      ],
-    },
+    order_burst: __ENV.SHAPE === 'constant'
+      ? {
+          executor: 'constant-arrival-rate',
+          rate: TARGET_TPS,
+          timeUnit: '1s',
+          duration: `${HOLD_SECONDS}s`,
+          preAllocatedVUs: Number(__ENV.PRE_VUS || 100),
+          maxVUs: Number(__ENV.MAX_VUS || 400),
+        }
+      : {
+          executor: 'ramping-arrival-rate',
+          startRate: 10,
+          timeUnit: '1s',
+          preAllocatedVUs: Number(__ENV.PRE_VUS || 100),
+          maxVUs: Number(__ENV.MAX_VUS || 400),
+          stages: [
+            { target: TARGET_TPS, duration: '30s' },
+            { target: TARGET_TPS, duration: `${HOLD_SECONDS}s` },
+            { target: 0, duration: '10s' },
+          ],
+        },
   },
   thresholds: {
     'order_latency': ['p(95)<800', 'p(99)<1500'],
